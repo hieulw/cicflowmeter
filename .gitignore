@@ -1,0 +1,10 @@
+Archive/
+__pycache__/
+venv/
+*.csv
+*.csv#
+*.ods
+*.ods#
+*.pcap
+*.pyc
+.idea
