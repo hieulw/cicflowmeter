@@ -1,0 +1,29 @@
+image: python:3.7
+
+stages:
+  - linter
+  - test
+  - build
+
+before_script:
+  - pip -V
+  - pip install -U pip
+
+linter:
+  stage: linter
+  allow_failure: true
+  script:
+    - pip install tox
+    - tox -e linter
+
+test:
+  stage: test
+  script:
+    - pip install tox
+    - tox -e py37
+
+build:
+  stage: build
+  script:
+    - make install
+    - cicflowmeter -h
