@@ -1,8 +1,9 @@
 import argparse
 
+from scapy.all import load_layer
 from scapy.sendrecv import AsyncSniffer
 
-from .flow_session import generate_session_class
+from flow_session import generate_session_class
 
 
 def create_sniffer(input_file, input_interface, output_mode, output_file):
@@ -33,7 +34,8 @@ def main():
 
     input_group = parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument(
-        "-i",
+        "-n",
+        "--online",
         "--interface",
         action="store",
         dest="input_interface",
@@ -41,6 +43,7 @@ def main():
     )
     input_group.add_argument(
         "-f",
+        "--offline",
         "--file",
         action="store",
         dest="input_file",
@@ -54,14 +57,21 @@ def main():
         "--flow",
         action="store_const",
         const="flow",
-        default="flow",
         dest="output_mode",
         help="output flows as csv",
     )
+    output_group.add_argument(
+        "-s",
+        "--json",
+        "--sequence",
+        action="store_const",
+        const="sequence",
+        dest="output_mode",
+        help="output flow segments as json",
+    )
 
     parser.add_argument(
-        "output",
-        help="output file name in flow mode",
+        "output", help="output file name (in flow mode) or directory (in sequence mode)"
     )
     args = parser.parse_args()
 
