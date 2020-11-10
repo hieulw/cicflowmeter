@@ -29,6 +29,43 @@ class PacketTime:
         ]
         return packet_times
 
+    def _get_statistics(self, alist: list):
+        iat = dict()
+
+        if len(alist) > 1:
+            iat["total"] = sum(alist)
+            iat["max"] = max(alist)
+            iat["min"] = min(alist)
+            iat["mean"] = numpy.mean(alist)
+            iat["std"] = numpy.sqrt(numpy.var(alist))
+        else:
+            iat["total"] = 0
+            iat["max"] = 0
+            iat["min"] = 0
+            iat["mean"] = 0
+            iat["std"] = 0
+
+        return iat
+
+    def get_packet_iat(self, packet_direction=None):
+        if packet_direction is not None:
+            packets = [
+                packet
+                for packet, direction in self.flow.packets
+                if direction == packet_direction
+            ]
+        else:
+            packets = [packet for packet, direction in self.flow.packets]
+
+        packet_iat = []
+        for i in range(1, len(packets)):
+            packet_iat.append(10e5 * float(packets[i].time - packets[i - 1].time))
+
+        return self._get_statistics(packet_iat)
+
+    def get_flow_iat(self):
+        return self._get_statistics(self.flow.flow_interarrival_time)
+
     def relative_time_list(self):
         relative_time_list = []
         packet_times = self._get_packet_times()

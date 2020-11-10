@@ -44,15 +44,15 @@ class FlowSession(DefaultSession):
             if "IP" not in packet:
                 return
 
-            if TLS not in packet:
-                return
+            # if TLS not in packet:
+            #     return
 
-            if TLSApplicationData not in packet:
-                return
+            # if TLSApplicationData not in packet:
+            #     return
 
-            if len(packet[TLSApplicationData]) < 40:
-                # PING frame (len = 34) or other useless frames
-                return
+            # if len(packet[TLSApplicationData]) < 40:
+            #     # PING frame (len = 34) or other useless frames
+            #     return
 
         self.packets_count += 1
 

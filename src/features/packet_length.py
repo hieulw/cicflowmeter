@@ -1,5 +1,7 @@
 import numpy
 from scipy import stats as stat
+from .context.packet_direction import PacketDirection
+from functools import lru_cache
 
 
 class PacketLength:
@@ -10,21 +12,77 @@ class PacketLength:
         grand_total (float): The cummulative total of the means.
 
     """
+
     mean_count = 0
     grand_total = 0
 
     def __init__(self, feature):
         self.feature = feature
 
-    def get_packet_length(self) -> list:
+    # @lru_cache(maxsize=2)
+    def get_packet_length(self, packet_direction=None) -> list:
         """Creates a list of packet lengths.
- 
+
         Returns:
             packet_lengths (List[int]):
 
         """
-
+        if packet_direction is not None:
+            return [
+                len(packet)
+                for packet, direction in self.feature.packets
+                if direction == packet_direction
+            ]
         return [len(packet) for packet, _ in self.feature.packets]
+
+    def get_max(self, packet_direction) -> int:
+        """Max packet lengths in forward direction.
+
+        Returns:
+            packet_lengths (int):
+
+        """
+
+        try:
+            return max(self.get_packet_length(packet_direction))
+        except ValueError:
+            return 0
+
+    def get_min(self, packet_direction) -> int:
+        """Min packet lengths in forward direction.
+
+        Returns:
+            packet_lengths (int):
+
+        """
+
+        try:
+            return min(self.get_packet_length(packet_direction))
+        except ValueError:
+            return 0
+
+    def get_total(self, packet_direction) -> int:
+        """Total packet lengths by direction.
+
+        Returns:
+            packet_lengths (int):
+
+        """
+
+        return sum(self.get_packet_length(packet_direction))
+
+    def get_avg(self, packet_direction=None) -> int:
+        """Total packet lengths by direction.
+
+        Returns:
+            packet_lengths (int):
+
+        """
+        count = len(self.get_packet_length(packet_direction))
+
+        if count > 0:
+            return self.get_total(packet_direction) / count
+        return 0
 
     def first_fifty(self) -> list:
         """Returns first 50 packet sizes
@@ -35,25 +93,28 @@ class PacketLength:
         """
         return self.get_packet_length()[:50]
 
-    def get_var(self) -> float:
+    def get_var(self, packet_direction) -> float:
         """The variation of packet lengths in a network Feature.
 
         Returns:
             float: The variation of packet lengths.
 
         """
-        return numpy.var(self.get_packet_length())
+        var = 0
+        if len(self.get_packet_length(packet_direction)) > 0:
+            var = numpy.var(self.get_packet_length(packet_direction))
+        return var
 
-    def get_std(self) -> float:
+    def get_std(self, packet_direction) -> float:
         """The standard deviation of packet lengths in a network flow.
- 
+
         Rens:
             float: The standard deviation of packet lengths.
 
         """
-        return numpy.sqrt(self.get_var())
+        return numpy.sqrt(self.get_var(packet_direction))
 
-    def get_mean(self) -> float:
+    def get_mean(self, packet_direction) -> float:
         """The mean of packet lengths in a network flow.
 
         Returns:
@@ -61,8 +122,8 @@ class PacketLength:
 
         """
         mean = 0
-        if self.get_packet_length() != 0:
-            mean = numpy.mean(self.get_packet_length())
+        if len(self.get_packet_length(packet_direction)) > 0:
+            mean = numpy.mean(self.get_packet_length(packet_direction))
 
         return mean
 
@@ -115,7 +176,7 @@ class PacketLength:
         """
         mean = self.get_mean()
         mode = self.get_mode()
-        dif = (mean - mode)
+        dif = mean - mode
         std = self.get_std()
         skew2 = -10
 

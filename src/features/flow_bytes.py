@@ -26,6 +26,33 @@ class FlowBytes:
         ]
         return direction_list
 
+    def get_bytes(self) -> int:
+        """Calculates the amount bytes being transfered.
+
+        Returns:
+            int: The amount of bytes.
+
+        """
+        feat = self.feature
+
+        return sum(len(packet) for packet, _ in feat.packets)
+
+    def get_rate(self) -> float:
+        """Calculates the rate of the bytes being transfered in the current flow.
+
+        Returns:
+            float: The bytes/sec sent.
+
+        """
+        duration = PacketTime(self.feature).get_duration()
+
+        if duration == 0:
+            rate = 0
+        else:
+            rate = self.get_bytes() / duration
+
+        return rate
+
     def get_bytes_sent(self) -> int:
         """Calculates the amount bytes sent from the machine being used to run DoHlyzer.
 

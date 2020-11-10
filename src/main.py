@@ -16,7 +16,7 @@ def create_sniffer(input_file, input_interface, output_mode, output_file):
     if input_file is not None:
         return AsyncSniffer(
             offline=input_file,
-            filter="ip",
+            filter="ip and (tcp or udp)",
             prn=None,
             session=NewFlowSession,
             store=False,
@@ -24,7 +24,7 @@ def create_sniffer(input_file, input_interface, output_mode, output_file):
     else:
         return AsyncSniffer(
             iface=input_interface,
-            filter="ip",
+            filter="ip and (tcp or udp)",
             prn=None,
             session=NewFlowSession,
             store=False,
@@ -77,7 +77,7 @@ def main():
     )
     args = parser.parse_args()
 
-    load_layer("ip")
+    # load_layer("ip")
 
     sniffer = create_sniffer(
         args.input_file, args.input_interface, args.output_mode, args.output
