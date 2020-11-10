@@ -6,3 +6,6 @@ uninstall:
 
 clean:
 	rm -rf *.egg-info build dist
+
+build:
+	python setup.py sdist bdist_wheel --universal

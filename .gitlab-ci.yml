@@ -4,6 +4,7 @@ stages:
   - linter
   - test
   - build
+  - release
 
 before_script:
   - pip -V
@@ -27,3 +28,13 @@ build:
   script:
     - make install
     - cicflowmeter -h
+
+release:
+  stage: release
+  script:
+    - pip install twine
+    - make build
+    - twine upload dist/* -u $TWINE_USERNAME -p $TWINE_PASSWD
+  when: manual
+  only:
+    - tags
