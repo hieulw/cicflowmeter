@@ -3,7 +3,7 @@ import argparse
 from scapy.all import load_layer
 from scapy.sendrecv import AsyncSniffer
 
-from flow_session import generate_session_class
+from .flow_session import generate_session_class
 
 
 def create_sniffer(input_file, input_interface, output_mode, output_file):

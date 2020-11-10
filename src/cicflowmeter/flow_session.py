@@ -5,10 +5,9 @@ from collections import defaultdict
 from scapy.layers.tls.record import TLS, TLSApplicationData
 from scapy.sessions import DefaultSession
 
-from features.context.packet_direction import PacketDirection
-from features.context.packet_flow_key import get_packet_flow_key
-from flow import Flow
-from time_series.processor import Processor
+from .features.context.packet_direction import PacketDirection
+from .features.context.packet_flow_key import get_packet_flow_key
+from .flow import Flow
 
 EXPIRED_UPDATE = 40
 
@@ -119,31 +118,17 @@ class FlowSession(DefaultSession):
         for k in keys:
             flow = self.flows.get(k)
 
-            if self.output_mode == "flow":
-                if (
-                    latest_time is None
-                    or latest_time - flow.latest_timestamp > EXPIRED_UPDATE
-                    or flow.duration > 90
-                ):
-                    data = flow.get_data()
-                    if self.csv_line == 0:
-                        self.csv_writer.writerow(data.keys())
-                    self.csv_writer.writerow(data.values())
-                    self.csv_line += 1
-                    del self.flows[k]
-            else:
-                if (
-                    latest_time is None
-                    or latest_time - flow.latest_timestamp > EXPIRED_UPDATE
-                ):
-                    output_dir = os.path.join(
-                        self.output_file, "doh" if flow.is_doh() else "ndoh"
-                    )
-                    os.makedirs(output_dir, exist_ok=True)
-                    proc = Processor(flow)
-                    flow_clumps = proc.create_flow_clumps_container()
-                    flow_clumps.to_json_file(output_dir)
-                    del self.flows[k]
+            if (
+                latest_time is None
+                or latest_time - flow.latest_timestamp > EXPIRED_UPDATE
+                or flow.duration > 90
+            ):
+                data = flow.get_data()
+                if self.csv_line == 0:
+                    self.csv_writer.writerow(data.keys())
+                self.csv_writer.writerow(data.values())
+                self.csv_line += 1
+                del self.flows[k]
         print("Garbage Collection Finished. Flows = {}".format(len(self.flows)))
 
 

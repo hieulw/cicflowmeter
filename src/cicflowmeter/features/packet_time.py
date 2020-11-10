@@ -2,7 +2,7 @@ from datetime import datetime
 
 import numpy
 from scipy import stats as stat
-from utils import get_statistics
+from ..utils import get_statistics
 
 
 class PacketTime:
