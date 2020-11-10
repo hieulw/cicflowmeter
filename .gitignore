@@ -8,3 +8,5 @@ venv/
 *.pcap
 *.pyc
 .idea
+.pytest_cache/
+.tox/
