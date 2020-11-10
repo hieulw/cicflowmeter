@@ -1,8 +1,6 @@
 import csv
-import os
 from collections import defaultdict
 
-from scapy.layers.tls.record import TLS, TLSApplicationData
 from scapy.sessions import DefaultSession
 
 from .features.context.packet_direction import PacketDirection

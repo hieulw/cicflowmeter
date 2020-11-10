@@ -1,6 +1,5 @@
 import argparse
 
-from scapy.all import load_layer
 from scapy.sendrecv import AsyncSniffer
 
 from .flow_session import generate_session_class
@@ -71,12 +70,16 @@ def main():
     )
 
     parser.add_argument(
-        "output", help="output file name (in flow mode) or directory (in sequence mode)"
+        "output",
+        help="output file name (in flow mode) or directory (in sequence mode)",
     )
     args = parser.parse_args()
 
     sniffer = create_sniffer(
-        args.input_file, args.input_interface, args.output_mode, args.output
+        args.input_file,
+        args.input_interface,
+        args.output_mode,
+        args.output,
     )
     sniffer.start()
 

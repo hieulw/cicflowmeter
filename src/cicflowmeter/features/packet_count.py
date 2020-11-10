@@ -1,5 +1,5 @@
-from .packet_time import PacketTime
 from .context.packet_direction import PacketDirection
+from .packet_time import PacketTime
 
 
 class PacketCount:

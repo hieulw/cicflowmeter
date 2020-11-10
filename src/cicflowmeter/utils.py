@@ -1,6 +1,7 @@
 import uuid
-import numpy
 from itertools import islice, zip_longest
+
+import numpy
 
 
 def grouper(iterable, n, max_groups=0, fillvalue=None):
