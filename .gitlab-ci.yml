@@ -4,6 +4,8 @@ stages:
   - test
   - build
   - release
+  - integration test
+  - deploy
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -55,3 +57,14 @@ release:
       - dist
   only:
     - tags
+
+integrate:
+  stage: integration test
+  script: echo test
+  needs: [build]
+
+deploy:
+  stage: deploy
+  script: echo "Deploy here"
+  when: manual
+  needs: [integrate]
