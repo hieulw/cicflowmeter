@@ -14,13 +14,7 @@ AUTHOR = "Le Hieu"
 REQUIRES_PYTHON = ">=3.7.0"
 VERSION = None
 
-# What packages are required for this module to be executed?
 REQUIRED = ["numpy", "scipy", "scapy"]
-
-# What packages are optional?
-EXTRAS = {
-    # 'fancy feature': ['django'],
-}
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------
@@ -60,13 +54,10 @@ setup(
     url=URL,
     packages=find_packages("src"),
     package_dir={"cicflowmeter": "src/cicflowmeter"},
-    # If your package is a single module, use this instead of 'packages':
-    # py_modules=['mypackage'],
     entry_points={
         "console_scripts": ["cicflowmeter=cicflowmeter.sniffer:main"],
     },
     install_requires=REQUIRED,
-    extras_require=EXTRAS,
     include_package_data=True,
     license="MIT",
     classifiers=[

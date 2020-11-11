@@ -26,20 +26,14 @@ cache:
 
 linter:
   stage: test
-  needs: []
   allow_failure: true
   script:
     - tox -e linter
 
 test:
   stage: test
-  needs: []
   script:
     - tox -e py37
-  artifacts:
-    when: always
-    reports:
-      junit: report.xml
 
 build:
   stage: build
@@ -67,7 +61,10 @@ release:
 integrate:
   stage: integration test
   script: echo test
-  needs: [build]
+  needs:
+    - linter
+    - test
+    - build
 
 deploy:
   stage: deploy

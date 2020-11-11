@@ -7,7 +7,7 @@ uninstall:
 	pip uninstall cicflowmeter -y
 
 clean:
-	rm -rf *.egg-info build dist
+	rm -rf *.egg-info build dist report.xml
 
 build:
 	python setup.py sdist bdist_wheel --universal
