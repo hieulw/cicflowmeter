@@ -6,38 +6,52 @@ stages:
   - build
   - release
 
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
 before_script:
-  - pip -V
   - pip install -U pip
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+  - pip install tox
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .cache/
+    - .tox/
+    - venv/
 
 linter:
   stage: linter
   allow_failure: true
   script:
-    - pip install tox
     - tox -e linter
 
 test:
   stage: test
   script:
-    - pip install tox
     - tox -e py37
 
 build:
   stage: build
   script:
-    - pip install twine
     - make build
-    - twine check dist/*
+    - tox -e pypi
     - make install
     - cicflowmeter -h
+  artifacts:
+    paths:
+      - dist/
 
 release:
   stage: release
   script:
-    - pip install twine
-    - make build
     - twine upload dist/* -u "__token__" -p $TWINE_TOKEN
   when: manual
+  artifacts:
+    paths:
+      - dist
   only:
     - tags
