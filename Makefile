@@ -9,3 +9,7 @@ clean:
 
 build:
 	python setup.py sdist bdist_wheel --universal
+
+release:
+	git tag -a v$(python setup.py --version)
+	git push --tag
