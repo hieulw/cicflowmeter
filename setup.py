@@ -14,7 +14,7 @@ URL = "https://gitlab.com/hieulw/cicflowmeter"
 EMAIL = "hieulw99@gmail.com"
 AUTHOR = "Le Hieu"
 REQUIRES_PYTHON = ">=3.7.0"
-VERSION = "0.1.0"
+VERSION = "0.0.1"
 
 # What packages are required for this module to be executed?
 REQUIRED = ["numpy", "scipy", "scapy"]
