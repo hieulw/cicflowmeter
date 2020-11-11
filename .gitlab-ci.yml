@@ -34,7 +34,7 @@ release:
   script:
     - pip install twine
     - make build
-    - twine upload dist/* -u $TWINE_USERNAME -p $TWINE_PASSWD
+    - twine upload dist/* -u "__token__" -p $TWINE_TOKEN
   when: manual
   only:
     - tags
