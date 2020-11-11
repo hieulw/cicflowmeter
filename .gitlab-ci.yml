@@ -26,6 +26,9 @@ test:
 build:
   stage: build
   script:
+    - pip install twine
+    - make build
+    - twine check dist/*
     - make install
     - cicflowmeter -h
 
