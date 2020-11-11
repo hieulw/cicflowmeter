@@ -26,12 +26,14 @@ cache:
 
 linter:
   stage: test
+  needs: []
   allow_failure: true
   script:
     - tox -e linter
 
 test:
   stage: test
+  needs: []
   script:
     - tox -e py37
 
