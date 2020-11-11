@@ -18,7 +18,7 @@ before_script:
   - pip install -r requirements.dev.txt
 
 cache:
-  key: ${CI_COMMIT_REF_SLUG}
+  key: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"
   paths:
     - .cache/
     - .tox/
