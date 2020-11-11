@@ -36,6 +36,10 @@ test:
   needs: []
   script:
     - tox -e py37
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
 
 build:
   stage: build
