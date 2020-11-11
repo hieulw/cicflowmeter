@@ -15,7 +15,7 @@ before_script:
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
-  - pip install -r requirements.dev.txt
+  - pip install tox twine
 
 cache:
   key: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"

@@ -1,5 +1,0 @@
-pytest
-flake8
-black
-tox
-twine
