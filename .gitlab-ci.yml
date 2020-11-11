@@ -1,7 +1,6 @@
 image: python:3.7
 
 stages:
-  - linter
   - test
   - build
   - release
@@ -24,7 +23,7 @@ cache:
     - venv/
 
 linter:
-  stage: linter
+  stage: test
   allow_failure: true
   script:
     - tox -e linter
@@ -41,6 +40,7 @@ build:
     - tox -e pypi
     - make install
     - cicflowmeter -h
+  needs: [test]
   artifacts:
     paths:
       - dist/
