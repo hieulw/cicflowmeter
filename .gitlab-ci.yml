@@ -7,7 +7,14 @@ stages:
   - integration test
   - deploy
 
+services:
+  - postgres:alpine
+
 variables:
+  POSTGRES_DB: test_database
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: ""
+  POSTGRES_HOST_AUTH_METHOD: trust
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 before_script:
@@ -64,7 +71,8 @@ release:
 
 integrate:
   stage: integration test
-  script: echo test
+  script:
+    - sudo docker ps
   needs:
     - linter
     - test
