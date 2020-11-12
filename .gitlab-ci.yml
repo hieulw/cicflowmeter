@@ -75,7 +75,7 @@ deploy_staging:
   script: echo "Deploy here"
   environment:
     name: staging
-    url: beta.example.com
+    url: https://beta.example.com
   needs: [integrate]
 
 deploy_production:
@@ -83,7 +83,7 @@ deploy_production:
   script: echo "Deploy here"
   environment:
     name: production
-    url: example.com
+    url: https://example.com
   when: manual
   needs: [integrate]
   only:
