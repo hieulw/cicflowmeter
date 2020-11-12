@@ -163,7 +163,7 @@ class Flow:
 
         return data
 
-    def add_packet(self, packet, direction) -> None:
+    def add_packet(self, packet: Any, direction: Enum) -> None:
         """Adds a packet to the current list of packets.
 
         Args:

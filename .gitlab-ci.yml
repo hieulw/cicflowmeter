@@ -88,3 +88,9 @@ deploy_production:
   needs: [integrate]
   only:
     - master
+
+notification:
+  stage: .post
+  script:
+    - curl -X POST $ZULIP_URL -u $ZULIP_EMAIL:$ZULIP_API -d "type=private" -d "to=$ZULIP_EMAIL" -d "content=$CI_COMMIT_DESCRIPTION - passed the tests."
+  needs: [integrate]
