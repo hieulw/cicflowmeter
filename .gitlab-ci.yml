@@ -70,8 +70,21 @@ integrate:
     - test
     - build
 
-deploy:
+deploy_staging:
   stage: deploy
   script: echo "Deploy here"
+  environment:
+    name: staging
+    url: beta.example.com
+  needs: [integrate]
+
+deploy_production:
+  stage: deploy
+  script: echo "Deploy here"
+  environment:
+    name: production
+    url: example.com
   when: manual
   needs: [integrate]
+  only:
+    - master
