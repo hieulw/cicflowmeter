@@ -79,7 +79,7 @@ class PacketTime:
 
         """
 
-        return 1e6 * (max(self._get_packet_times()) - min(self._get_packet_times()))
+        return max(self._get_packet_times()) - min(self._get_packet_times())
 
     def get_var(self):
         """Calculates the variation of packet times in a network flow.

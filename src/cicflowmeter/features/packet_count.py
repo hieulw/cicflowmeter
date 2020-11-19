@@ -55,6 +55,14 @@ class PacketCount:
             return backward_size / forward_size
         return 0
 
+    @staticmethod
+    def get_payload(packet):
+        if "TCP" in packet:
+            return packet["TCP"].payload
+        elif "UDP" in packet:
+            return packet["UDP"].payload
+        return 0
+
     def has_payload(self, packet_direction=None) -> int:
         """Calculates download and upload ratio.
 
@@ -62,25 +70,19 @@ class PacketCount:
             int: packets
         """
 
-        def get_payload(packet):
-            if "TCP" in packet:
-                return packet["TCP"].payload
-            elif "UDP" in packet:
-                return packet["UDP"].payload
-            return 0
-
         if packet_direction is not None:
             return len(
                 [
                     packet
                     for packet, direction in self.feature.packets
-                    if direction == packet_direction and len(get_payload(packet)) > 0
+                    if direction == packet_direction
+                    and len(self.get_payload(packet)) > 0
                 ]
             )
         return len(
             [
                 packet
                 for packet, direction in self.feature.packets
-                if len(get_payload(packet)) > 0
+                if len(self.get_payload(packet)) > 0
             ]
         )
