@@ -1,4 +1,5 @@
 import csv
+import requests
 from collections import defaultdict
 
 from scapy.sessions import DefaultSession
@@ -8,6 +9,7 @@ from .features.context.packet_flow_key import get_packet_flow_key
 from .flow import Flow
 
 EXPIRED_UPDATE = 40
+MACHINE_LEARNING_API = "http://localhost:8000/predict"
 
 
 class FlowSession(DefaultSession):
@@ -40,16 +42,6 @@ class FlowSession(DefaultSession):
         if self.output_mode != "flow":
             if "IP" not in packet:
                 return
-
-            # if TLS not in packet:
-            #     return
-
-            # if TLSApplicationData not in packet:
-            #     return
-
-            # if len(packet[TLSApplicationData]) < 40:
-            #     # PING frame (len = 34) or other useless frames
-            #     return
 
         self.packets_count += 1
 
@@ -122,20 +114,32 @@ class FlowSession(DefaultSession):
                 or flow.duration > 90
             ):
                 data = flow.get_data()
+
+                # POST Request to Model API
+                payload = {"columns": list(data.keys()), "data": [list(data.values())]}
+                post = requests.post(
+                    self.url_model,
+                    json=payload,
+                    headers={"Content-Type": "application/json; format=pandas-split"},
+                )
+                print(post.json())
+
                 if self.csv_line == 0:
                     self.csv_writer.writerow(data.keys())
+
                 self.csv_writer.writerow(data.values())
                 self.csv_line += 1
                 del self.flows[k]
         print("Garbage Collection Finished. Flows = {}".format(len(self.flows)))
 
 
-def generate_session_class(output_mode, output_file):
+def generate_session_class(output_mode, output_file, url_model):
     return type(
         "NewFlowSession",
         (FlowSession,),
         {
             "output_mode": output_mode,
             "output_file": output_file,
+            "url_model": url_model,
         },
     )

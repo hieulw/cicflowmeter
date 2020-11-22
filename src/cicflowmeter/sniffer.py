@@ -5,10 +5,12 @@ from scapy.sendrecv import AsyncSniffer
 from .flow_session import generate_session_class
 
 
-def create_sniffer(input_file, input_interface, output_mode, output_file):
+def create_sniffer(
+    input_file, input_interface, output_mode, output_file, url_model=None
+):
     assert (input_file is None) ^ (input_interface is None)
 
-    NewFlowSession = generate_session_class(output_mode, output_file)
+    NewFlowSession = generate_session_class(output_mode, output_file, url_model)
 
     if input_file is not None:
         return AsyncSniffer(
@@ -69,6 +71,15 @@ def main():
         help="output flow segments as json",
     )
 
+    url_model = parser.add_mutually_exclusive_group(required=False)
+    url_model.add_argument(
+        "-u",
+        "--url",
+        action="store",
+        dest="url_model",
+        help="URL endpoint for send to Machine Learning Model. e.g http://0.0.0.0:80/prediction",
+    )
+
     parser.add_argument(
         "output",
         help="output file name (in flow mode) or directory (in sequence mode)",
@@ -80,6 +91,7 @@ def main():
         args.input_interface,
         args.output_mode,
         args.output,
+        args.url_model,
     )
     sniffer.start()
 

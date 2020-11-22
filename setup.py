@@ -53,7 +53,8 @@ setup(
     python_requires=REQUIRES_PYTHON,
     url=URL,
     packages=find_packages("src"),
-    package_dir={"cicflowmeter": "src/cicflowmeter"},
+    # package_dir={"cicflowmeter": "src/cicflowmeter"},
+    package_dir={"": "src"},
     entry_points={
         "console_scripts": ["cicflowmeter=cicflowmeter.sniffer:main"],
     },
