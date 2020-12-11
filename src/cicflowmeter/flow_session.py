@@ -1,7 +1,7 @@
 import csv
-import requests
 from collections import defaultdict
 
+import requests
 from scapy.sessions import DefaultSession
 
 from .features.context.packet_direction import PacketDirection
@@ -122,13 +122,32 @@ class FlowSession(DefaultSession):
                     json=payload,
                     headers={"Content-Type": "application/json; format=pandas-split"},
                 )
-                print(post.json())
+                benign_threshold = 0.9
+                resp = post.json()
+                result = resp["result"].pop()
+                if result == 0:
+                    if resp["probability"][0][result] < benign_threshold:
+                        result_print = "Malicious"
+                    else:
+                        result_print = "Benign"
+                else:
+                    result_print = "Malicious"
+
+                print(
+                    "{: <15} -> {: <15} \t {} (~{:.2f}%)".format(
+                        resp["src_ip"],
+                        resp["dst_ip"],
+                        result_print,
+                        resp["probability"].pop()[result] * 100,
+                    )
+                )
 
                 if self.csv_line == 0:
                     self.csv_writer.writerow(data.keys())
 
                 self.csv_writer.writerow(data.values())
                 self.csv_line += 1
+
                 del self.flows[k]
         print("Garbage Collection Finished. Flows = {}".format(len(self.flows)))
 
