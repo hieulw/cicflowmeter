@@ -61,36 +61,35 @@ release:
       - dist
   only:
     - tags
+# integrate:
+#   stage: integration test
+#   script: echo test
+#   needs:
+#     - linter
+#     - test
+#     - build
 
-integrate:
-  stage: integration test
-  script: echo test
-  needs:
-    - linter
-    - test
-    - build
+# deploy_staging:
+#   stage: deploy
+#   script: echo "Deploy here"
+#   environment:
+#     name: staging
+#     url: https://beta.example.com
+#   needs: [integrate]
 
-deploy_staging:
-  stage: deploy
-  script: echo "Deploy here"
-  environment:
-    name: staging
-    url: https://beta.example.com
-  needs: [integrate]
+# deploy_production:
+#   stage: deploy
+#   script: echo "Deploy here"
+#   environment:
+#     name: production
+#     url: https://example.com
+#   when: manual
+#   needs: [integrate]
+#   only:
+#     - master
 
-deploy_production:
-  stage: deploy
-  script: echo "Deploy here"
-  environment:
-    name: production
-    url: https://example.com
-  when: manual
-  needs: [integrate]
-  only:
-    - master
-
-notification:
-  stage: .post
-  script:
-    - curl -X POST $ZULIP_URL -u $ZULIP_EMAIL:$ZULIP_API -d "type=private" -d "to=$ZULIP_EMAIL" -d "content=$CI_COMMIT_DESCRIPTION - passed the tests."
-  needs: [integrate]
+# notification:
+#   stage: .post
+#   script:
+#     - curl -X POST $ZULIP_URL -u $ZULIP_EMAIL:$ZULIP_API -d "type=private" -d "to=$ZULIP_EMAIL" -d "content=$CI_COMMIT_DESCRIPTION - passed the tests."
+#   needs: [integrate]
