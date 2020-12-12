@@ -35,7 +35,7 @@ def main():
 
     input_group = parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument(
-        "-n",
+        "-i",
         "--online",
         "--interface",
         action="store",
@@ -51,7 +51,7 @@ def main():
         help="capture offline data from INPUT_FILE",
     )
 
-    output_group = parser.add_mutually_exclusive_group(required=True)
+    output_group = parser.add_mutually_exclusive_group(required=False)
     output_group.add_argument(
         "-c",
         "--csv",

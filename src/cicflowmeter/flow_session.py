@@ -92,7 +92,7 @@ class FlowSession(DefaultSession):
 
         flow.add_packet(packet, direction)
 
-        if self.packets_count % 10000 == 0 or (
+        if self.packets_count % 100 == 0 or (
             flow.duration > 120 and self.output_mode == "flow"
         ):
             print("Packet count: {}".format(self.packets_count))
@@ -116,31 +116,40 @@ class FlowSession(DefaultSession):
                 data = flow.get_data()
 
                 # POST Request to Model API
-                payload = {"columns": list(data.keys()), "data": [list(data.values())]}
-                post = requests.post(
-                    self.url_model,
-                    json=payload,
-                    headers={"Content-Type": "application/json; format=pandas-split"},
-                )
-                benign_threshold = 0.9
-                resp = post.json()
-                result = resp["result"].pop()
-                if result == 0:
-                    if resp["probability"][0][result] < benign_threshold:
-                        result_print = "Malicious"
-                    else:
-                        result_print = "Benign"
-                else:
-                    result_print = "Malicious"
-
-                print(
-                    "{: <15} -> {: <15} \t {} (~{:.2f}%)".format(
-                        resp["src_ip"],
-                        resp["dst_ip"],
-                        result_print,
-                        resp["probability"].pop()[result] * 100,
+                if self.url_model:
+                    payload = {
+                        "columns": list(data.keys()),
+                        "data": [list(data.values())],
+                    }
+                    post = requests.post(
+                        self.url_model,
+                        json=payload,
+                        headers={
+                            "Content-Type": "application/json; format=pandas-split"
+                        },
                     )
-                )
+                    resp = post.json()
+                    result = resp["result"].pop()
+                    if result == 0:
+                        # benign_threshold = 0.9
+                        # if resp["probability"][0][result] < benign_threshold:
+                        #     result_print = "Malicious"
+                        # else:
+                        #     result_print = "Benign"
+                        result_print = "Benign"
+                    else:
+                        result_print = "Malicious"
+
+                    print(
+                        "{: <15}:{: <6} -> {: <15}:{: <6} \t {} (~{:.2f}%)".format(
+                            resp["src_ip"],
+                            resp["src_port"],
+                            resp["dst_ip"],
+                            resp["dst_port"],
+                            result_print,
+                            resp["probability"].pop()[result] * 100,
+                        )
+                    )
 
                 if self.csv_line == 0:
                     self.csv_writer.writerow(data.keys())
