@@ -95,7 +95,7 @@ class FlowSession(DefaultSession):
         if self.packets_count % 100 == 0 or (
             flow.duration > 120 and self.output_mode == "flow"
         ):
-            print("Packet count: {}".format(self.packets_count))
+            # print("Packet count: {}".format(self.packets_count))
             self.garbage_collect(packet.time)
 
     def get_flows(self) -> list:
@@ -103,7 +103,7 @@ class FlowSession(DefaultSession):
 
     def garbage_collect(self, latest_time) -> None:
         # TODO: Garbage Collection / Feature Extraction should have a separate thread
-        print("Garbage Collection Began. Flows = {}".format(len(self.flows)))
+        # print("Garbage Collection Began. Flows = {}".format(len(self.flows)))
         keys = list(self.flows.keys())
         for k in keys:
             flow = self.flows.get(k)
@@ -158,7 +158,7 @@ class FlowSession(DefaultSession):
                 self.csv_line += 1
 
                 del self.flows[k]
-        print("Garbage Collection Finished. Flows = {}".format(len(self.flows)))
+        # print("Garbage Collection Finished. Flows = {}".format(len(self.flows)))
 
 
 def generate_session_class(output_mode, output_file, url_model):
