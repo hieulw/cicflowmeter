@@ -36,15 +36,14 @@ def main():
     input_group = parser.add_mutually_exclusive_group(required=True)
     input_group.add_argument(
         "-i",
-        "--online",
         "--interface",
         action="store",
         dest="input_interface",
         help="capture online data from INPUT_INTERFACE",
     )
+
     input_group.add_argument(
         "-f",
-        "--offline",
         "--file",
         action="store",
         dest="input_file",
@@ -61,15 +60,6 @@ def main():
         dest="output_mode",
         help="output flows as csv",
     )
-    output_group.add_argument(
-        "-s",
-        "--json",
-        "--sequence",
-        action="store_const",
-        const="sequence",
-        dest="output_mode",
-        help="output flow segments as json",
-    )
 
     url_model = parser.add_mutually_exclusive_group(required=False)
     url_model.add_argument(
@@ -84,6 +74,7 @@ def main():
         "output",
         help="output file name (in flow mode) or directory (in sequence mode)",
     )
+
     args = parser.parse_args()
 
     sniffer = create_sniffer(

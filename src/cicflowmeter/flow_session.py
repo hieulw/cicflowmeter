@@ -10,6 +10,7 @@ from .flow import Flow
 
 EXPIRED_UPDATE = 40
 MACHINE_LEARNING_API = "http://localhost:8000/predict"
+GARBAGE_COLLECT_PACKETS = 100
 
 
 class FlowSession(DefaultSession):
@@ -40,14 +41,19 @@ class FlowSession(DefaultSession):
         direction = PacketDirection.FORWARD
 
         if self.output_mode != "flow":
-            if "IP" not in packet:
+            if "TCP" not in packet:
+                return
+            elif "UDP" not in packet:
                 return
 
-        self.packets_count += 1
+        try:
+            # Creates a key variable to check
+            packet_flow_key = get_packet_flow_key(packet, direction)
+            flow = self.flows.get((packet_flow_key, count))
+        except Exception:
+            return
 
-        # Creates a key variable to check
-        packet_flow_key = get_packet_flow_key(packet, direction)
-        flow = self.flows.get((packet_flow_key, count))
+        self.packets_count += 1
 
         # If there is no forward flow with a count of 0
         if flow is None:
@@ -92,10 +98,12 @@ class FlowSession(DefaultSession):
 
         flow.add_packet(packet, direction)
 
-        if self.packets_count % 100 == 0 or (
+        if not self.url_model:
+            GARBAGE_COLLECT_PACKETS = 10000
+
+        if self.packets_count % GARBAGE_COLLECT_PACKETS == 0 or (
             flow.duration > 120 and self.output_mode == "flow"
         ):
-            # print("Packet count: {}".format(self.packets_count))
             self.garbage_collect(packet.time)
 
     def get_flows(self) -> list:
@@ -103,7 +111,8 @@ class FlowSession(DefaultSession):
 
     def garbage_collect(self, latest_time) -> None:
         # TODO: Garbage Collection / Feature Extraction should have a separate thread
-        # print("Garbage Collection Began. Flows = {}".format(len(self.flows)))
+        if not self.url_model:
+            print("Garbage Collection Began. Flows = {}".format(len(self.flows)))
         keys = list(self.flows.keys())
         for k in keys:
             flow = self.flows.get(k)
@@ -131,11 +140,6 @@ class FlowSession(DefaultSession):
                     resp = post.json()
                     result = resp["result"].pop()
                     if result == 0:
-                        # benign_threshold = 0.9
-                        # if resp["probability"][0][result] < benign_threshold:
-                        #     result_print = "Malicious"
-                        # else:
-                        #     result_print = "Benign"
                         result_print = "Benign"
                     else:
                         result_print = "Malicious"
@@ -158,7 +162,8 @@ class FlowSession(DefaultSession):
                 self.csv_line += 1
 
                 del self.flows[k]
-        # print("Garbage Collection Finished. Flows = {}".format(len(self.flows)))
+        if not self.url_model:
+            print("Garbage Collection Finished. Flows = {}".format(len(self.flows)))
 
 
 def generate_session_class(output_mode, output_file, url_model):

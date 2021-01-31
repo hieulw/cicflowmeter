@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Any
+from decimal import Decimal
 
 from . import constants
 from .features.context import packet_flow_key
@@ -212,7 +213,7 @@ class Flow:
 
         if self.start_timestamp != 0:
             self.flow_interarrival_time.append(
-                1e6 * (packet.time - self.latest_timestamp)
+                Decimal("1e6") * (packet.time - self.latest_timestamp)
             )
 
         self.latest_timestamp = max([packet.time, self.latest_timestamp])
@@ -241,7 +242,7 @@ class Flow:
         last_timestamp = (
             self.latest_timestamp if self.latest_timestamp != 0 else packet.time
         )
-        if (packet.time - (last_timestamp / 1e6)) > constants.CLUMP_TIMEOUT:
+        if (packet.time - (last_timestamp / Decimal("1e6"))) > constants.CLUMP_TIMEOUT:
             self.update_active_idle(packet.time - last_timestamp)
 
     def update_active_idle(self, current_time):
@@ -255,7 +256,7 @@ class Flow:
             duration = abs(float(self.last_active - self.start_active))
             if duration > 0:
                 self.active.append(1e6 * duration)
-            self.idle.append(1e6 * (current_time - self.last_active))
+            self.idle.append(Decimal("1e6") * (current_time - self.last_active))
             self.start_active = current_time
             self.last_active = current_time
         else:
