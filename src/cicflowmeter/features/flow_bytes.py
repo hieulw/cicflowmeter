@@ -163,6 +163,9 @@ class FlowBytes:
 
         packets = self.feature.packets
 
+        if not packets:
+            return 0
+
         return sum(
             self._header_size(packet)
             for packet, direction in packets
@@ -178,6 +181,9 @@ class FlowBytes:
         """
 
         packets = self.feature.packets
+
+        if not packets:
+            return 0
 
         return min(
             self._header_size(packet)
