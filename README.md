@@ -1,5 +1,7 @@
 # Python CICFlowMeter
 
+> This project is not maintained actively by me. If you found something wrong (bugs, incorrect results) feel free to create merge request.
+
 ### Installation
 
 ```sh
