@@ -62,31 +62,18 @@ class FlowSession(DefaultSession):
             packet_flow_key = get_packet_flow_key(packet, direction)
             flow = self.flows.get((packet_flow_key, count))
 
-            if flow is None:
-                # If no flow exists create a new flow
-                direction = PacketDirection.FORWARD
-                flow = Flow(packet, direction)
-                packet_flow_key = get_packet_flow_key(packet, direction)
-                self.flows[(packet_flow_key, count)] = flow
-
-            elif (packet.time - flow.latest_timestamp) > EXPIRED_UPDATE:
-                # If the packet exists in the flow but the packet is sent
-                # after too much of a delay than it is a part of a new flow.
-                expired = EXPIRED_UPDATE
-                while (packet.time - flow.latest_timestamp) > expired:
-                    count += 1
-                    expired += EXPIRED_UPDATE
-                    flow = self.flows.get((packet_flow_key, count))
-
-                    if flow is None:
-                        flow = Flow(packet, direction)
-                        self.flows[(packet_flow_key, count)] = flow
-                        break
+        if flow is None:
+            # If no flow exists create a new flow
+            direction = PacketDirection.FORWARD
+            flow = Flow(packet, direction)
+            packet_flow_key = get_packet_flow_key(packet, direction)
+            self.flows[(packet_flow_key, count)] = flow
 
         elif (packet.time - flow.latest_timestamp) > EXPIRED_UPDATE:
+            # If the packet exists in the flow but the packet is sent
+            # after too much of a delay than it is a part of a new flow.
             expired = EXPIRED_UPDATE
             while (packet.time - flow.latest_timestamp) > expired:
-
                 count += 1
                 expired += EXPIRED_UPDATE
                 flow = self.flows.get((packet_flow_key, count))
@@ -95,6 +82,11 @@ class FlowSession(DefaultSession):
                     flow = Flow(packet, direction)
                     self.flows[(packet_flow_key, count)] = flow
                     break
+        elif "F" in str(packet.flags):
+            # If it has FIN flag then early collect flow and continue
+            flow.add_packet(packet.flags)
+            self.garbage_collect(packet.time)
+            return
 
         flow.add_packet(packet, direction)
 
