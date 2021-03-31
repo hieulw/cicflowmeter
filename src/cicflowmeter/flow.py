@@ -241,7 +241,7 @@ class Flow:
         last_timestamp = (
             self.latest_timestamp if self.latest_timestamp != 0 else packet.time
         )
-        if (packet.time - (last_timestamp / 1e6)) > constants.CLUMP_TIMEOUT:
+        if (packet.time - last_timestamp) > constants.CLUMP_TIMEOUT:
             self.update_active_idle(packet.time - last_timestamp)
 
     def update_active_idle(self, current_time):

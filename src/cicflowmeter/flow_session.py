@@ -1,7 +1,6 @@
 import csv
 from collections import defaultdict
 
-import requests
 from scapy.sessions import DefaultSession
 
 from .features.context.packet_direction import PacketDirection
@@ -115,37 +114,6 @@ class FlowSession(DefaultSession):
                 or flow.duration > 90
             ):
                 data = flow.get_data()
-
-                # POST Request to Model API
-                if self.url_model:
-                    payload = {
-                        "columns": list(data.keys()),
-                        "data": [list(data.values())],
-                    }
-                    post = requests.post(
-                        self.url_model,
-                        json=payload,
-                        headers={
-                            "Content-Type": "application/json; format=pandas-split"
-                        },
-                    )
-                    resp = post.json()
-                    result = resp["result"].pop()
-                    if result == 0:
-                        result_print = "Benign"
-                    else:
-                        result_print = "Malicious"
-
-                    print(
-                        "{: <15}:{: <6} -> {: <15}:{: <6} \t {} (~{:.2f}%)".format(
-                            resp["src_ip"],
-                            resp["src_port"],
-                            resp["dst_ip"],
-                            resp["dst_port"],
-                            result_print,
-                            resp["probability"].pop()[result] * 100,
-                        )
-                    )
 
                 if self.csv_line == 0:
                     self.csv_writer.writerow(data.keys())
