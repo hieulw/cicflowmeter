@@ -10,12 +10,6 @@ cd cicflowmeter
 python setup.py install
 ```
 
-or
-
-```sh
-pip install cicflowmeter
-```
-
 ### Usage
 
 ```sh
@@ -44,4 +38,3 @@ cicflowmeter -i eth0 -c flows.csv
 ```
 
 ### Reference: https://www.unb.ca/cic/research/applications.html#CICFlowMeter
-

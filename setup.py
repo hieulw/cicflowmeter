@@ -14,7 +14,20 @@ AUTHOR = "Le Hieu"
 REQUIRES_PYTHON = ">=3.7.0"
 VERSION = None
 
-REQUIRED = ["numpy", "scipy", "scapy"]
+
+def get_requirements(source: str = "requirements.txt"):
+    requirements = []
+    with open(source) as f:
+        for line in f:
+            package, _, comment = line.partition("#")
+            package = package.strip()
+            if package:
+                requirements.append(package)
+
+    return requirements
+
+
+REQUIRED = get_requirements("requirements.txt")
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------
