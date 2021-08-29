@@ -83,7 +83,7 @@ class FlowSession(DefaultSession):
                     break
         elif "F" in str(packet.flags):
             # If it has FIN flag then early collect flow and continue
-            flow.add_packet(packet.flags)
+            flow.add_packet(packet, direction)
             self.garbage_collect(packet.time)
             return
 
