@@ -10,6 +10,7 @@ from .features.packet_count import PacketCount
 from .features.packet_length import PacketLength
 from .features.packet_time import PacketTime
 from .utils import get_statistics
+import decimal
 
 
 class Flow:
@@ -212,7 +213,7 @@ class Flow:
 
         if self.start_timestamp != 0:
             self.flow_interarrival_time.append(
-                1e6 * (packet.time - self.latest_timestamp)
+                decimal.Decimal(1e6) * (packet.time - self.latest_timestamp)
             )
 
         self.latest_timestamp = max([packet.time, self.latest_timestamp])
@@ -255,7 +256,7 @@ class Flow:
             duration = abs(float(self.last_active - self.start_active))
             if duration > 0:
                 self.active.append(1e6 * duration)
-            self.idle.append(1e6 * (current_time - self.last_active))
+            self.idle.append(decimal.Decimal(1e6) * (current_time - self.last_active))
             self.start_active = current_time
             self.last_active = current_time
         else:
