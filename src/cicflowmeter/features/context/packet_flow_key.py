@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 
+from scapy.packet import Packet
+
 from .packet_direction import PacketDirection
 
 
-def get_packet_flow_key(packet, direction) -> tuple:
+def get_packet_flow_key(packet: Packet, direction: PacketDirection) -> tuple:
     """Creates a key signature for a packet.
 
     Summary:

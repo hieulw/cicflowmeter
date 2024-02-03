@@ -1,5 +1,4 @@
-from enum import Enum
-from typing import Any
+from scapy.packet import Packet
 
 from . import constants
 from .features.context import packet_flow_key
@@ -16,7 +15,7 @@ import decimal
 class Flow:
     """This class summarizes the values of the features of the network flows"""
 
-    def __init__(self, packet: Any, direction: Enum):
+    def __init__(self, packet: Packet, direction: PacketDirection):
         """This method initializes an object from the Flow class.
 
         Args:
@@ -198,7 +197,7 @@ class Flow:
 
         return data
 
-    def add_packet(self, packet: Any, direction: Enum) -> None:
+    def add_packet(self, packet: Packet, direction: PacketDirection) -> None:
         """Adds a packet to the current list of packets.
 
         Args:
@@ -232,7 +231,7 @@ class Flow:
             self.start_timestamp = packet.time
             self.protocol = packet.proto
 
-    def update_subflow(self, packet):
+    def update_subflow(self, packet: Packet):
         """Update subflow
 
         Args:
@@ -262,7 +261,7 @@ class Flow:
         else:
             self.last_active = current_time
 
-    def update_flow_bulk(self, packet, direction):
+    def update_flow_bulk(self, packet: Packet, direction: PacketDirection):
         """Update bulk flow
 
         Args:

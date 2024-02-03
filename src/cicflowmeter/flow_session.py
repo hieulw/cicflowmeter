@@ -1,6 +1,7 @@
 import csv
 from collections import defaultdict
 
+from scapy.packet import Packet
 from scapy.sessions import DefaultSession
 
 from .features.context.packet_direction import PacketDirection
@@ -35,7 +36,7 @@ class FlowSession(DefaultSession):
         self.garbage_collect(None)
         return super(FlowSession, self).toPacketList()
 
-    def on_packet_received(self, packet):
+    def on_packet_received(self, packet: Packet):
         count = 0
         direction = PacketDirection.FORWARD
 
