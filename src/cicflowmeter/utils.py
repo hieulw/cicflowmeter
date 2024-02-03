@@ -1,7 +1,14 @@
+import logging
 import uuid
 from itertools import islice, zip_longest
 
 import numpy
+
+
+def get_logger(debug=False):
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+    return logging.getLogger("cicflowmeter")
 
 
 def grouper(iterable, n, max_groups=0, fillvalue=None):

@@ -1,5 +1,4 @@
 import csv
-from collections import defaultdict
 
 from scapy.packet import Packet
 from scapy.sessions import DefaultSession
@@ -10,6 +9,7 @@ from .flow import Flow
 
 EXPIRED_UPDATE = 40
 GARBAGE_COLLECT_PACKETS = 100
+from .utils import get_logger
 
 
 class FlowSession(DefaultSession):
@@ -23,9 +23,9 @@ class FlowSession(DefaultSession):
             output = open(self.output_file, "w")
             self.csv_writer = csv.writer(output)
 
+        self.logger = get_logger(self.verbose)
         self.packets_count = 0
 
-        self.clumped_flows_per_label = defaultdict(list)
 
         super(FlowSession, self).__init__(*args, **kwargs)
 
@@ -100,6 +100,7 @@ class FlowSession(DefaultSession):
 
     def garbage_collect(self, latest_time) -> None:
         # TODO: Garbage Collection / Feature Extraction should have a separate thread
+        self.logger.debug(f"Garbage Collection Began. Flows = {len(self.flows)}")
         keys = list(self.flows.keys())
         for k in keys:
             flow = self.flows.get(k)
@@ -118,6 +119,7 @@ class FlowSession(DefaultSession):
                 self.csv_line += 1
 
                 del self.flows[k]
+        self.logger.debug(f"Garbage Collection Finished. Flows = {len(self.flows)}")
 
 
 def generate_session_class(output_mode, output_file, verbose):
