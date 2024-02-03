@@ -1,13 +1,12 @@
-import csv
-
 from scapy.packet import Packet
 from scapy.sessions import DefaultSession
+
+from cicflowmeter.writer import output_writer_factory
 
 from .constants import EXPIRED_UPDATE, GARBAGE_COLLECT_PACKETS
 from .features.context.packet_direction import PacketDirection
 from .features.context.packet_flow_key import get_packet_flow_key
 from .flow import Flow
-
 from .utils import get_logger
 
 
@@ -16,15 +15,9 @@ class FlowSession(DefaultSession):
 
     def __init__(self, *args, **kwargs):
         self.flows = {}
-        self.csv_line = 0
-
-        if self.output_mode == "flow":
-            output = open(self.output_file, "w")
-            self.csv_writer = csv.writer(output)
-
         self.logger = get_logger(self.verbose)
         self.packets_count = 0
-
+        self.output_writer = output_writer_factory(self.output_mode, self.output_file)
 
         super(FlowSession, self).__init__(*args, **kwargs)
 
@@ -32,13 +25,14 @@ class FlowSession(DefaultSession):
         # Sniffer finished all the packets it needed to sniff.
         # It is not a good place for this, we need to somehow define a finish signal for AsyncSniffer
         self.garbage_collect(None)
+        del self.output_writer
         return super(FlowSession, self).toPacketList()
 
     def on_packet_received(self, packet: Packet):
         count = 0
         direction = PacketDirection.FORWARD
 
-        if self.output_mode != "flow":
+        if self.output_mode != "csv":
             if "TCP" not in packet:
                 return
             elif "UDP" not in packet:
@@ -88,10 +82,7 @@ class FlowSession(DefaultSession):
 
         flow.add_packet(packet, direction)
 
-
-        if self.packets_count % GARBAGE_COLLECT_PACKETS == 0 or (
-            flow.duration > 120 and self.output_mode == "flow"
-        ):
+        if self.packets_count % GARBAGE_COLLECT_PACKETS == 0 or flow.duration > 120:
             self.garbage_collect(packet.time)
 
     def get_flows(self) -> list:
@@ -105,19 +96,14 @@ class FlowSession(DefaultSession):
             flow = self.flows.get(k)
 
             if (
-                latest_time is None
-                or latest_time - flow.latest_timestamp > EXPIRED_UPDATE
-                or flow.duration > 90
+                latest_time is not None
+                and latest_time - flow.latest_timestamp < EXPIRED_UPDATE
+                and flow.duration < 90
             ):
-                data = flow.get_data()
+                continue
 
-                if self.csv_line == 0:
-                    self.csv_writer.writerow(data.keys())
-
-                self.csv_writer.writerow(data.values())
-                self.csv_line += 1
-
-                del self.flows[k]
+            self.output_writer.write(flow.get_data())
+            del self.flows[k]
         self.logger.debug(f"Garbage Collection Finished. Flows = {len(self.flows)}")
 
 

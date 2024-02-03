@@ -56,9 +56,8 @@ def main():
     output_group.add_argument(
         "-c",
         "--csv",
-        "--flow",
         action="store_const",
-        const="flow",
+        const="csv",
         dest="output_mode",
         help="output flows as csv",
     )
