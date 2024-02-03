@@ -3,12 +3,11 @@ import csv
 from scapy.packet import Packet
 from scapy.sessions import DefaultSession
 
+from .constants import EXPIRED_UPDATE, GARBAGE_COLLECT_PACKETS
 from .features.context.packet_direction import PacketDirection
 from .features.context.packet_flow_key import get_packet_flow_key
 from .flow import Flow
 
-EXPIRED_UPDATE = 40
-GARBAGE_COLLECT_PACKETS = 100
 from .utils import get_logger
 
 
