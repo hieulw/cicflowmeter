@@ -67,7 +67,7 @@ class PacketTime:
             String of Date and time.
 
         """
-        time = self.flow.packets[0][0].time
+        time = float(self.flow.packets[0][0].time)
         date_time = datetime.fromtimestamp(time).strftime("%Y-%m-%d %H:%M:%S")
         return date_time
 

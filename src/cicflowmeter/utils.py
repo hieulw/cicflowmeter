@@ -28,6 +28,7 @@ def random_string():
 def get_statistics(alist: list):
     """Get summary statistics of a list"""
     iat = dict()
+    alist = [float(x) for x in alist]
 
     if len(alist) > 1:
         iat["total"] = sum(alist)
