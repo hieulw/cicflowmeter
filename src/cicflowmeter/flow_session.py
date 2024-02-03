@@ -9,7 +9,6 @@ from .features.context.packet_flow_key import get_packet_flow_key
 from .flow import Flow
 
 EXPIRED_UPDATE = 40
-MACHINE_LEARNING_API = "http://localhost:8000/predict"
 GARBAGE_COLLECT_PACKETS = 100
 
 
@@ -90,8 +89,6 @@ class FlowSession(DefaultSession):
 
         flow.add_packet(packet, direction)
 
-        if not self.url_model:
-            GARBAGE_COLLECT_PACKETS = 10000
 
         if self.packets_count % GARBAGE_COLLECT_PACKETS == 0 or (
             flow.duration > 120 and self.output_mode == "flow"
@@ -103,8 +100,6 @@ class FlowSession(DefaultSession):
 
     def garbage_collect(self, latest_time) -> None:
         # TODO: Garbage Collection / Feature Extraction should have a separate thread
-        if not self.url_model:
-            print("Garbage Collection Began. Flows = {}".format(len(self.flows)))
         keys = list(self.flows.keys())
         for k in keys:
             flow = self.flows.get(k)
@@ -123,17 +118,15 @@ class FlowSession(DefaultSession):
                 self.csv_line += 1
 
                 del self.flows[k]
-        if not self.url_model:
-            print("Garbage Collection Finished. Flows = {}".format(len(self.flows)))
 
 
-def generate_session_class(output_mode, output_file, url_model):
+def generate_session_class(output_mode, output_file, verbose):
     return type(
         "NewFlowSession",
         (FlowSession,),
         {
             "output_mode": output_mode,
             "output_file": output_file,
-            "url_model": url_model,
+            "verbose": verbose,
         },
     )

@@ -6,13 +6,15 @@ from .flow_session import generate_session_class
 
 
 def create_sniffer(
-    input_file, input_interface, output_mode, output_file, url_model=None
+    input_file, input_interface, output_mode, output_file, verbose=False
 ):
-    assert (input_file is None) ^ (input_interface is None)
+    assert (input_file is None) ^ (
+        input_interface is None
+    ), "Either provide interface input or file input not both"
 
-    NewFlowSession = generate_session_class(output_mode, output_file, url_model)
+    NewFlowSession = generate_session_class(output_mode, output_file, verbose)
 
-    if input_file is not None:
+    if input_file:
         return AsyncSniffer(
             offline=input_file,
             filter="ip and (tcp or udp)",
@@ -61,19 +63,11 @@ def main():
         help="output flows as csv",
     )
 
-    url_model = parser.add_mutually_exclusive_group(required=False)
-    url_model.add_argument(
-        "-u",
-        "--url",
-        action="store",
-        dest="url_model",
-        help="URL endpoint for send to Machine Learning Model. e.g http://0.0.0.0:80/prediction",
-    )
-
     parser.add_argument(
         "output",
         help="output file name (in flow mode) or directory (in sequence mode)",
     )
+    parser.add_argument("-v", "--verbose", action="store_true", help="more verbosity")
 
     args = parser.parse_args()
 
@@ -82,7 +76,7 @@ def main():
         args.input_interface,
         args.output_mode,
         args.output,
-        args.url_model,
+        args.verbose,
     )
     sniffer.start()
 

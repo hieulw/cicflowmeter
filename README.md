@@ -13,7 +13,7 @@ poetry install
 ### Usage
 
 ```sh
-usage: cicflowmeter [-h] (-i INPUT_INTERFACE | -f INPUT_FILE) [-c] [-u URL_MODEL] output
+usage: cicflowmeter [-h] (-i INPUT_INTERFACE | -f INPUT_FILE) [-c] output
 
 positional arguments:
   output                output file name (in flow mode) or directory (in sequence mode)
