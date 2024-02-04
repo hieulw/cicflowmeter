@@ -7,8 +7,8 @@ from .packet_time import PacketTime
 class FlowBytes:
     """Extracts features from the traffic related to the bytes in a flow"""
 
-    def __init__(self, feature):
-        self.feature = feature
+    def __init__(self, flow):
+        self.flow = flow
 
     def direction_list(self) -> list:
         """Returns a list of the directions of the first 50 packets in a flow.
@@ -17,10 +17,10 @@ class FlowBytes:
             list with packet directions.
 
         """
-        feat = self.feature
+        flow = self.flow
         direction_list = [
             (i, direction.name)[1]
-            for (i, (packet, direction)) in enumerate(feat.packets)
+            for (i, (packet, direction)) in enumerate(flow.packets)
             if i < 50
         ]
         return direction_list
@@ -32,9 +32,9 @@ class FlowBytes:
             int: The amount of bytes.
 
         """
-        feat = self.feature
+        flow = self.flow
 
-        return sum(len(packet) for packet, _ in feat.packets)
+        return sum(len(packet) for packet, _ in flow.packets)
 
     def get_rate(self) -> float:
         """Calculates the rate of the bytes being transfered in the current flow.
@@ -43,7 +43,7 @@ class FlowBytes:
             float: The bytes/sec sent.
 
         """
-        duration = PacketTime(self.feature).get_duration()
+        duration = PacketTime(self.flow).get_duration()
 
         if duration == 0:
             rate = 0
@@ -59,11 +59,11 @@ class FlowBytes:
             int: The amount of bytes.
 
         """
-        feat = self.feature
+        flow = self.flow
 
         return sum(
             len(packet)
-            for packet, direction in feat.packets
+            for packet, direction in flow.packets
             if direction == PacketDirection.FORWARD
         )
 
@@ -75,7 +75,7 @@ class FlowBytes:
 
         """
         sent = self.get_bytes_sent()
-        duration = PacketTime(self.feature).get_duration()
+        duration = PacketTime(self.flow).get_duration()
 
         if duration == 0:
             rate = -1
@@ -91,7 +91,7 @@ class FlowBytes:
             int: The amount of bytes.
 
         """
-        packets = self.feature.packets
+        packets = self.flow.packets
 
         return sum(
             len(packet)
@@ -107,7 +107,7 @@ class FlowBytes:
 
         """
         received = self.get_bytes_received()
-        duration = PacketTime(self.feature).get_duration()
+        duration = PacketTime(self.flow).get_duration()
 
         if duration == 0:
             rate = -1
@@ -124,7 +124,7 @@ class FlowBytes:
 
         """
 
-        packets = self.feature.packets
+        packets = self.flow.packets
 
         return sum(
             self._header_size(packet)
@@ -141,7 +141,7 @@ class FlowBytes:
 
         """
         forward = self.get_forward_header_bytes()
-        duration = PacketTime(self.feature).get_duration()
+        duration = PacketTime(self.flow).get_duration()
 
         if duration > 0:
             rate = forward / duration
@@ -161,7 +161,7 @@ class FlowBytes:
 
         """
 
-        packets = self.feature.packets
+        packets = self.flow.packets
 
         if not packets:
             return 0
@@ -180,7 +180,7 @@ class FlowBytes:
 
         """
 
-        packets = self.feature.packets
+        packets = self.flow.packets
 
         if not packets:
             return 0
@@ -200,7 +200,7 @@ class FlowBytes:
 
         """
         reverse = self.get_reverse_header_bytes()
-        duration = PacketTime(self.feature).get_duration()
+        duration = PacketTime(self.flow).get_duration()
 
         if duration == 0:
             rate = -1
@@ -234,45 +234,36 @@ class FlowBytes:
             int: The initial ttl value in seconds.
 
         """
-        feat = self.feature
-        return [packet["IP"].ttl for packet, _ in feat.packets][0]
+        flow = self.flow
+        return [packet["IP"].ttl for packet, _ in flow.packets][0]
 
     def get_bytes_per_bulk(self, packet_direction):
         if packet_direction == PacketDirection.FORWARD:
-            if self.feature.forward_bulk_count != 0:
-                return self.feature.forward_bulk_size / self.feature.forward_bulk_count
+            if self.flow.forward_bulk_count != 0:
+                return self.flow.forward_bulk_size / self.flow.forward_bulk_count
         else:
-            if self.feature.backward_bulk_count != 0:
-                return (
-                    self.feature.backward_bulk_size / self.feature.backward_bulk_count
-                )
+            if self.flow.backward_bulk_count != 0:
+                return self.flow.backward_bulk_size / self.flow.backward_bulk_count
         return 0
 
     def get_packets_per_bulk(self, packet_direction):
         if packet_direction == PacketDirection.FORWARD:
-            if self.feature.forward_bulk_count != 0:
+            if self.flow.forward_bulk_count != 0:
                 return (
-                    self.feature.forward_bulk_packet_count
-                    / self.feature.forward_bulk_count
+                    self.flow.forward_bulk_packet_count / self.flow.forward_bulk_count
                 )
         else:
-            if self.feature.backward_bulk_count != 0:
+            if self.flow.backward_bulk_count != 0:
                 return (
-                    self.feature.backward_bulk_packet_count
-                    / self.feature.backward_bulk_count
+                    self.flow.backward_bulk_packet_count / self.flow.backward_bulk_count
                 )
         return 0
 
     def get_bulk_rate(self, packet_direction):
         if packet_direction == PacketDirection.FORWARD:
-            if self.feature.forward_bulk_count != 0:
-                return (
-                    self.feature.forward_bulk_size / self.feature.forward_bulk_duration
-                )
+            if self.flow.forward_bulk_count != 0:
+                return self.flow.forward_bulk_size / self.flow.forward_bulk_duration
         else:
-            if self.feature.backward_bulk_count != 0:
-                return (
-                    self.feature.backward_bulk_size
-                    / self.feature.backward_bulk_duration
-                )
+            if self.flow.backward_bulk_count != 0:
+                return self.flow.backward_bulk_size / self.flow.backward_bulk_duration
         return 0

@@ -14,8 +14,8 @@ class PacketLength:
     mean_count = 0
     grand_total = 0
 
-    def __init__(self, feature):
-        self.feature = feature
+    def __init__(self, flow):
+        self.flow = flow
 
     def get_packet_length(self, packet_direction=None) -> list:
         """Creates a list of packet lengths.
@@ -27,10 +27,10 @@ class PacketLength:
         if packet_direction is not None:
             return [
                 len(packet)
-                for packet, direction in self.feature.packets
+                for packet, direction in self.flow.packets
                 if direction == packet_direction
             ]
-        return [len(packet) for packet, _ in self.feature.packets]
+        return [len(packet) for packet, _ in self.flow.packets]
 
     def get_header_length(self, packet_direction=None) -> list:
         """Creates a list of packet lengths.
@@ -42,10 +42,10 @@ class PacketLength:
         if packet_direction is not None:
             return (
                 packet["IP"].ihl * 4
-                for packet, direction in self.feature.packets
+                for packet, direction in self.flow.packets
                 if direction == packet_direction
             )
-        return (packet["IP"].ihl * 4 for packet, _ in self.feature.packets)
+        return (packet["IP"].ihl * 4 for packet, _ in self.flow.packets)
 
     def get_total_header(self, packet_direction=None) -> int:
         """Calculates the summary header lengths.

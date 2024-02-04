@@ -1,37 +1,38 @@
 class FlagCount:
-    """This class extracts features related to the Flags Count."""
+    """This class extracts features related to the Flags Count.
 
-    def __init__(self, feature):
-        self.feature = feature
-        self.flags = {
-            "F": "FIN",
-            "S": "SYN",
-            "R": "RST",
-            "P": "PSH",
-            "A": "ACK",
-            "U": "URG",
-            "E": "ECE",
-            "C": "CWR",
-        }
+    TCP Flags: (UDP does not have flag)
+        SYN: Synchronization
+        ACK: Acknowledgement
+        FIN: Finish
+        RST: Reset
+        URG: Urgent
+        PSH: Push
+        CWR
+        ECE
+    """
 
-    def has_flag(self, flag, packet_direction=None) -> bool:
+    def __init__(self, flow):
+        self.flow = flow
+
+    def count(self, flag, packet_direction=None) -> bool:
         """Count packets by direction.
 
         Returns:
             packets_count (int):
 
         """
-        packets = (
-            (
+        count = 0
+        if packet_direction is not None:
+            packets = (
                 packet
-                for packet, direction in self.feature.packets
+                for packet, direction in self.flow.packets
                 if direction == packet_direction
             )
-            if packet_direction is not None
-            else (packet for packet, _ in self.feature.packets)
-        )
+        else:
+            packets = (packet for packet, _ in self.flow.packets)
 
         for packet in packets:
-            if flag[0] in str(packet.flags):
-                return 1
-        return 0
+            if flag[0] in packet.sprintf("%TCP.flags%"):
+                count += 1
+        return count

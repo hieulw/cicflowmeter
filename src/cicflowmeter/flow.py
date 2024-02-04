@@ -141,17 +141,17 @@ class Flow:
             "bwd_iat_mean": float(backward_iat["mean"]),
             "bwd_iat_std": float(backward_iat["std"]),
             # Flags statistics
-            "fwd_psh_flags": flag_count.has_flag("PSH", PacketDirection.FORWARD),
-            "bwd_psh_flags": flag_count.has_flag("PSH", PacketDirection.REVERSE),
-            "fwd_urg_flags": flag_count.has_flag("URG", PacketDirection.FORWARD),
-            "bwd_urg_flags": flag_count.has_flag("URG", PacketDirection.REVERSE),
-            "fin_flag_cnt": flag_count.has_flag("FIN"),
-            "syn_flag_cnt": flag_count.has_flag("SYN"),
-            "rst_flag_cnt": flag_count.has_flag("RST"),
-            "psh_flag_cnt": flag_count.has_flag("PSH"),
-            "ack_flag_cnt": flag_count.has_flag("ACK"),
-            "urg_flag_cnt": flag_count.has_flag("URG"),
-            "ece_flag_cnt": flag_count.has_flag("ECE"),
+            "fwd_psh_flags": flag_count.count("PSH", PacketDirection.FORWARD),
+            "bwd_psh_flags": flag_count.count("PSH", PacketDirection.REVERSE),
+            "fwd_urg_flags": flag_count.count("URG", PacketDirection.FORWARD),
+            "bwd_urg_flags": flag_count.count("URG", PacketDirection.REVERSE),
+            "fin_flag_cnt": flag_count.count("FIN"),
+            "syn_flag_cnt": flag_count.count("SYN"),
+            "rst_flag_cnt": flag_count.count("RST"),
+            "psh_flag_cnt": flag_count.count("PSH"),
+            "ack_flag_cnt": flag_count.count("ACK"),
+            "urg_flag_cnt": flag_count.count("URG"),
+            "ece_flag_cnt": flag_count.count("ECE"),
             # Response Time
             "down_up_ratio": packet_count.get_down_up_ratio(),
             "pkt_size_avg": packet_length.get_avg(),
@@ -188,7 +188,7 @@ class Flow:
         # Duplicated features
         data["fwd_seg_size_avg"] = data["fwd_pkt_len_mean"]
         data["bwd_seg_size_avg"] = data["bwd_pkt_len_mean"]
-        data["cwe_flag_count"] = data["fwd_urg_flags"]
+        data["cwr_flag_count"] = data["fwd_urg_flags"]
         data["subflow_fwd_pkts"] = data["tot_fwd_pkts"]
         data["subflow_bwd_pkts"] = data["tot_bwd_pkts"]
         data["subflow_fwd_byts"] = data["totlen_fwd_pkts"]

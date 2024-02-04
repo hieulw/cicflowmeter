@@ -9,8 +9,8 @@ class ResponseTime:
        between an outgoing packet and the following response.
     """
 
-    def __init__(self, feature):
-        self.feature = feature
+    def __init__(self, flow):
+        self.flow = flow
 
     def get_dif(self) -> list:
         """Calculates the time difference in seconds between\
@@ -23,7 +23,7 @@ class ResponseTime:
         time_diff = []
         temp_packet = None
         temp_direction = None
-        for packet, direction in self.feature.packets:
+        for packet, direction in self.flow.packets:
             if (
                 temp_direction == PacketDirection.FORWARD
                 and direction == PacketDirection.REVERSE

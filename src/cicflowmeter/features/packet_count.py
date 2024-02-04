@@ -5,8 +5,8 @@ from .packet_time import PacketTime
 class PacketCount:
     """This class extracts features related to the Packet Count."""
 
-    def __init__(self, feature):
-        self.feature = feature
+    def __init__(self, flow):
+        self.flow = flow
 
     def get_total(self, packet_direction=None) -> int:
         """Count packets by direction.
@@ -20,11 +20,11 @@ class PacketCount:
             return len(
                 [
                     packet
-                    for packet, direction in self.feature.packets
+                    for packet, direction in self.flow.packets
                     if direction == packet_direction
                 ]
             )
-        return len(self.feature.packets)
+        return len(self.flow.packets)
 
     def get_rate(self, packet_direction=None) -> float:
         """Calculates the rate of the packets being transfered
@@ -34,7 +34,7 @@ class PacketCount:
             float: The packets/sec.
 
         """
-        duration = PacketTime(self.feature).get_duration()
+        duration = PacketTime(self.flow).get_duration()
 
         if duration == 0:
             rate = 0
@@ -74,7 +74,7 @@ class PacketCount:
             return len(
                 [
                     packet
-                    for packet, direction in self.feature.packets
+                    for packet, direction in self.flow.packets
                     if direction == packet_direction
                     and len(self.get_payload(packet)) > 0
                 ]
@@ -82,7 +82,7 @@ class PacketCount:
         return len(
             [
                 packet
-                for packet, direction in self.feature.packets
+                for packet, direction in self.flow.packets
                 if len(self.get_payload(packet)) > 0
             ]
         )
