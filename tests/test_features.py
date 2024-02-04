@@ -1,8 +1,7 @@
-from scapy.all import IP, TCP, UDP, ICMP
-from cicflowmeter.features.context.packet_flow_key import get_packet_flow_key
-from cicflowmeter.features.context.packet_direction import PacketDirection
-from cicflowmeter.flow import Flow
 import pytest
+from cicflowmeter.features.context import PacketDirection, get_packet_flow_key
+from cicflowmeter.flow import Flow
+from scapy.all import ICMP, IP, TCP, UDP
 
 
 @pytest.fixture

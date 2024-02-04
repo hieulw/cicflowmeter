@@ -37,13 +37,12 @@ class PacketTime:
                 if direction == packet_direction
             ]
         else:
-            packets = [packet for packet, direction in self.flow.packets]
+            packets = [packet for packet, _ in self.flow.packets]
 
-        packet_iat = []
-        for i in range(1, len(packets)):
-            packet_iat.append(1e6 * float(packets[i].time - packets[i - 1].time))
-
-        return packet_iat
+        return [
+            1e6 * float(packets[i].time - packets[i - 1].time)
+            for i in range(1, len(packets))
+        ]
 
     def relative_time_list(self):
         relative_time_list = []
@@ -60,7 +59,7 @@ class PacketTime:
 
         return relative_time_list
 
-    def get_time_stamp(self):
+    def get_timestamp(self):
         """Returns the date and time in a human readeable format.
 
         Return (str):
@@ -68,8 +67,7 @@ class PacketTime:
 
         """
         time = float(self.flow.packets[0][0].time)
-        date_time = datetime.fromtimestamp(time).strftime("%Y-%m-%d %H:%M:%S")
-        return date_time
+        return datetime.fromtimestamp(time).strftime("%Y-%m-%d %H:%M:%S")
 
     def get_duration(self):
         """Calculates the duration of a network flow.

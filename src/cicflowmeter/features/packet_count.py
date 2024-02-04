@@ -1,4 +1,4 @@
-from .context.packet_direction import PacketDirection
+from .context import PacketDirection
 from .packet_time import PacketTime
 
 
@@ -15,7 +15,6 @@ class PacketCount:
             packets_count (int):
 
         """
-
         if packet_direction is not None:
             return len(
                 [
@@ -82,7 +81,7 @@ class PacketCount:
         return len(
             [
                 packet
-                for packet, direction in self.flow.packets
+                for packet, _ in self.flow.packets
                 if len(self.get_payload(packet)) > 0
             ]
         )

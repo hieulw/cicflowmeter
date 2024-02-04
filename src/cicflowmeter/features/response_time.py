@@ -1,7 +1,7 @@
 import numpy
 from scipy import stats as stat
 
-from .context.packet_direction import PacketDirection
+from .context import PacketDirection
 
 
 class ResponseTime:

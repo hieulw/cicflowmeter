@@ -1,6 +1,6 @@
 from scapy.layers.inet import IP, TCP
 
-from .context.packet_direction import PacketDirection
+from .context import PacketDirection
 from .packet_time import PacketTime
 
 
@@ -10,21 +10,6 @@ class FlowBytes:
     def __init__(self, flow):
         self.flow = flow
 
-    def direction_list(self) -> list:
-        """Returns a list of the directions of the first 50 packets in a flow.
-
-        Return:
-            list with packet directions.
-
-        """
-        flow = self.flow
-        direction_list = [
-            (i, direction.name)[1]
-            for (i, (packet, direction)) in enumerate(flow.packets)
-            if i < 50
-        ]
-        return direction_list
-
     def get_bytes(self) -> int:
         """Calculates the amount bytes being transfered.
 
@@ -32,9 +17,7 @@ class FlowBytes:
             int: The amount of bytes.
 
         """
-        flow = self.flow
-
-        return sum(len(packet) for packet, _ in flow.packets)
+        return sum(len(packet) for packet, _ in self.flow.packets)
 
     def get_rate(self) -> float:
         """Calculates the rate of the bytes being transfered in the current flow.
@@ -59,11 +42,9 @@ class FlowBytes:
             int: The amount of bytes.
 
         """
-        flow = self.flow
-
         return sum(
             len(packet)
-            for packet, direction in flow.packets
+            for packet, direction in self.flow.packets
             if direction == PacketDirection.FORWARD
         )
 
@@ -123,12 +104,9 @@ class FlowBytes:
             int: The amount of bytes.
 
         """
-
-        packets = self.flow.packets
-
         return sum(
             self._header_size(packet)
-            for packet, direction in packets
+            for packet, direction in self.flow.packets
             if direction == PacketDirection.FORWARD
         )
 
@@ -160,15 +138,12 @@ class FlowBytes:
             int: The amount of bytes.
 
         """
-
-        packets = self.flow.packets
-
-        if not packets:
+        if not self.flow.packets:
             return 0
 
         return sum(
             self._header_size(packet)
-            for packet, direction in packets
+            for packet, direction in self.flow.packets
             if direction == PacketDirection.REVERSE
         )
 
@@ -179,15 +154,12 @@ class FlowBytes:
             int: The amount of bytes.
 
         """
-
-        packets = self.flow.packets
-
-        if not packets:
+        if not self.flow.packets:
             return 0
 
         return min(
             self._header_size(packet)
-            for packet, direction in packets
+            for packet, direction in self.flow.packets
             if direction == PacketDirection.FORWARD
         )
 
@@ -234,36 +206,43 @@ class FlowBytes:
             int: The initial ttl value in seconds.
 
         """
-        flow = self.flow
-        return [packet["IP"].ttl for packet, _ in flow.packets][0]
+        return [packet["IP"].ttl for packet, _ in self.flow.packets][0]
 
-    def get_bytes_per_bulk(self, packet_direction):
-        if packet_direction == PacketDirection.FORWARD:
-            if self.flow.forward_bulk_count != 0:
-                return self.flow.forward_bulk_size / self.flow.forward_bulk_count
-        else:
-            if self.flow.backward_bulk_count != 0:
-                return self.flow.backward_bulk_size / self.flow.backward_bulk_count
+    def get_bytes_per_bulk(self, direction: PacketDirection) -> float:
+        """Calculates packet bytes per bulk
+
+        Returns:
+            float: bytes per bulk ratio.
+
+        """
+        if direction is PacketDirection.FORWARD and self.flow.forward_bulk_count != 0:
+            return self.flow.forward_bulk_size / self.flow.forward_bulk_count
+        if direction is PacketDirection.REVERSE and self.flow.backward_bulk_count != 0:
+            return self.flow.backward_bulk_size / self.flow.backward_bulk_count
         return 0
 
-    def get_packets_per_bulk(self, packet_direction):
-        if packet_direction == PacketDirection.FORWARD:
-            if self.flow.forward_bulk_count != 0:
-                return (
-                    self.flow.forward_bulk_packet_count / self.flow.forward_bulk_count
-                )
-        else:
-            if self.flow.backward_bulk_count != 0:
-                return (
-                    self.flow.backward_bulk_packet_count / self.flow.backward_bulk_count
-                )
+    def get_packets_per_bulk(self, direction: PacketDirection) -> float:
+        """Calculates number of packets per bulk
+
+        Returns:
+            float: number of packets per bulk ratio.
+
+        """
+        if direction is PacketDirection.FORWARD and self.flow.forward_bulk_count != 0:
+            return self.flow.forward_bulk_packet_count / self.flow.forward_bulk_count
+        if direction is PacketDirection.REVERSE and self.flow.backward_bulk_count != 0:
+            return self.flow.backward_bulk_packet_count / self.flow.backward_bulk_count
         return 0
 
-    def get_bulk_rate(self, packet_direction):
-        if packet_direction == PacketDirection.FORWARD:
-            if self.flow.forward_bulk_count != 0:
-                return self.flow.forward_bulk_size / self.flow.forward_bulk_duration
-        else:
-            if self.flow.backward_bulk_count != 0:
-                return self.flow.backward_bulk_size / self.flow.backward_bulk_duration
+    def get_bulk_rate(self, direction: PacketDirection) -> float:
+        """Calculates bulk rate
+
+        Returns:
+            float: bulk size per seconds.
+
+        """
+        if direction is PacketDirection.FORWARD and self.flow.forward_bulk_count != 0:
+            return self.flow.forward_bulk_size / self.flow.forward_bulk_duration
+        if direction is PacketDirection.REVERSE and self.flow.backward_bulk_count != 0:
+            return self.flow.backward_bulk_size / self.flow.backward_bulk_duration
         return 0

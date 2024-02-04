@@ -72,7 +72,6 @@ class PacketLength:
             packet_lengths (int):
 
         """
-
         try:
             return max(self.get_packet_length(packet_direction))
         except ValueError:
@@ -85,7 +84,6 @@ class PacketLength:
             packet_lengths (int):
 
         """
-
         try:
             return min(self.get_packet_length(packet_direction))
         except ValueError:
@@ -98,7 +96,6 @@ class PacketLength:
             packet_lengths (int):
 
         """
-
         return sum(self.get_packet_length(packet_direction))
 
     def get_avg(self, packet_direction=None) -> int:

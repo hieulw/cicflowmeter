@@ -4,8 +4,7 @@ from scapy.sessions import DefaultSession
 from cicflowmeter.writer import output_writer_factory
 
 from .constants import EXPIRED_UPDATE, GARBAGE_COLLECT_PACKETS
-from .features.context.packet_direction import PacketDirection
-from .features.context.packet_flow_key import get_packet_flow_key
+from .features.context import PacketDirection, get_packet_flow_key
 from .flow import Flow
 from .utils import get_logger
 
@@ -74,7 +73,7 @@ class FlowSession(DefaultSession):
                     flow = Flow(packet, direction)
                     self.flows[(packet_flow_key, count)] = flow
                     break
-        elif "F" in str(packet.flags):
+        elif "F" in packet.flags:
             # If it has FIN flag then early collect flow and continue
             flow.add_packet(packet, direction)
             self.garbage_collect(packet.time)
