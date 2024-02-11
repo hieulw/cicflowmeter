@@ -241,8 +241,14 @@ class FlowBytes:
             float: bulk size per seconds.
 
         """
-        if direction is PacketDirection.FORWARD and self.flow.forward_bulk_count != 0:
+        if (
+            direction is PacketDirection.FORWARD
+            and self.flow.forward_bulk_duration != 0
+        ):
             return self.flow.forward_bulk_size / self.flow.forward_bulk_duration
-        if direction is PacketDirection.REVERSE and self.flow.backward_bulk_count != 0:
+        if (
+            direction is PacketDirection.REVERSE
+            and self.flow.backward_bulk_duration != 0
+        ):
             return self.flow.backward_bulk_size / self.flow.backward_bulk_duration
         return 0

@@ -63,7 +63,7 @@ class PacketCount:
         return 0
 
     def has_payload(self, packet_direction=None) -> int:
-        """Calculates download and upload ratio.
+        """Count packet has payload.
 
         Returns:
             int: packets
