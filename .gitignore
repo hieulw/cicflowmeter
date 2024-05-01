@@ -1,6 +1,7 @@
 Archive/
 __pycache__/
 venv/
+.ruff_cache/
 *.csv
 *.csv#
 *.ods
