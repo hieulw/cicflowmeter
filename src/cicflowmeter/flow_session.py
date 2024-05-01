@@ -45,6 +45,7 @@ class FlowSession(DefaultSession):
             return
 
         self.packets_count += 1
+        self.logger.debug(f"Packet {self.packets_count}: {packet}")
 
         # If there is no forward flow with a count of 0
         if flow is None:
@@ -89,7 +90,6 @@ class FlowSession(DefaultSession):
 
     def garbage_collect(self, latest_time) -> None:
         # TODO: Garbage Collection / Feature Extraction should have a separate thread
-        self.logger.debug(f"Garbage Collection Began. Flows = {len(self.flows)}")
         keys = list(self.flows.keys())
         for k in keys:
             flow = self.flows.get(k)
@@ -103,7 +103,7 @@ class FlowSession(DefaultSession):
 
             self.output_writer.write(flow.get_data())
             del self.flows[k]
-        self.logger.debug(f"Garbage Collection Finished. Flows = {len(self.flows)}")
+            self.logger.debug(f"Flow Collected! Remain Flows = {len(self.flows)}")
 
 
 def generate_session_class(output_mode, output_file, verbose):
