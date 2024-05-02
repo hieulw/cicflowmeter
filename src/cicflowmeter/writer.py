@@ -1,22 +1,17 @@
 import csv
-from abc import ABC
+from typing import Protocol
+
+import requests
 
 
-class OutputWriter(ABC):
-    def __init__(self, output_file) -> None:
-        self.file = open(output_file, "w")
-
+class OutputWriter(Protocol):
     def write(self, data: dict) -> None:
         raise NotImplementedError
-
-    def __del__(self):
-        self.file.close()
 
 
 class CSVWriter(OutputWriter):
     def __init__(self, output_file) -> None:
-        super().__init__(output_file)
-
+        self.file = open(output_file, "w")
         self.line = 0
         self.writer = csv.writer(self.file)
 
@@ -25,9 +20,30 @@ class CSVWriter(OutputWriter):
             self.writer.writerow(data.keys())
 
         self.writer.writerow(data.values())
+        self.file.flush()
         self.line += 1
 
+    def __del__(self):
+        self.file.close()
 
-def output_writer_factory(output_mode, output_file) -> OutputWriter:
-    if output_mode == "csv":
-        return CSVWriter(output_file)
+
+class HttpWriter(OutputWriter):
+    def __init__(self, output_url) -> None:
+        self.url = output_url
+        self.session = requests.Session()
+
+    def write(self, data: dict) -> None:
+        self.session.post(self.url, json=data)
+
+    def __del__(self):
+        self.session.close()
+
+
+def output_writer_factory(output_mode, output) -> OutputWriter:
+    match output_mode:
+        case "url":
+            return HttpWriter(output)
+        case "csv":
+            return CSVWriter(output)
+        case _:
+            raise RuntimeError("no output_mode provided")

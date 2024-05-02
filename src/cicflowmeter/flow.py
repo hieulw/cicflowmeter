@@ -59,7 +59,7 @@ class Flow:
         self.backward_bulk_size = 0
         self.backward_bulk_size_tmp = 0
 
-    def get_data(self) -> dict:
+    def get_data(self, include_fields=None) -> dict:
         """This method obtains the values of the features extracted from each flow.
 
         Note:
@@ -180,6 +180,9 @@ class Flow:
         data["subflow_bwd_pkts"] = data["tot_bwd_pkts"]
         data["subflow_fwd_byts"] = data["totlen_fwd_pkts"]
         data["subflow_bwd_byts"] = data["totlen_bwd_pkts"]
+
+        if include_fields is not None:
+            data = {k: v for k, v in data.items() if k in include_fields}
 
         return data
 

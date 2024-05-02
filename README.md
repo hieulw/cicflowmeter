@@ -13,17 +13,21 @@ poetry install
 ### Usage
 
 ```sh
-usage: cicflowmeter [-h] (-i INPUT_INTERFACE | -f INPUT_FILE) [-c] [-v] output
+usage: cicflowmeter [-h] (-i INPUT_INTERFACE | -f INPUT_FILE) (-c | -u) [--fields FIELDS] [-v] output
 
 positional arguments:
-  output                output file name (in flow mode) or directory (in sequence mode)
+  output                output file name (in csv mode) or url (in url mode)
 
 options:
   -h, --help            show this help message and exit
-  -i INPUT_INTERFACE    capture online data from INPUT_INTERFACE
-  -f INPUT_FILE         capture offline data from INPUT_FILE
+  -i INPUT_INTERFACE, --interface INPUT_INTERFACE
+                        capture online data from INPUT_INTERFACE
+  -f INPUT_FILE, --file INPUT_FILE
+                        capture offline data from INPUT_FILE
   -c, --csv             output flows as csv
-  -v, --verbose         more verbosity
+  -u, --url             output flows as request to url
+  --fields FIELDS       comma separated fields to include in output (default: all)
+  -v, --verbose         more verbose
 ```
 
 Convert pcap file to flow csv:
@@ -32,10 +36,10 @@ Convert pcap file to flow csv:
 cicflowmeter -f example.pcap -c flows.csv
 ```
 
-Sniff packets real-time from interface to flow csv: (**need root permission**)
+Sniff packets real-time from interface to flow request: (**need root permission**)
 
 ```
-cicflowmeter -i eth0 -c flows.csv
+cicflowmeter -i eth0 -u http://localhost:8080/predict
 ```
 
 ### References:
