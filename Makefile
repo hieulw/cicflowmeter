@@ -1,17 +1,17 @@
 VERSION:=$(shell poetry version --short)
 
 install:
-	python setup.py install
-
-uninstall:
-	pip uninstall cicflowmeter -y
+	@poetry install
 
 clean:
 	rm -rf *.egg-info build dist report.xml *.csv
 
-build:
-	python setup.py sdist bdist_wheel --universal
-
-release:
+release-minor:
+	@poetry version minor
 	@git tag -a v$(VERSION)
-	@git push --tag
+
+release-patch:
+	@poetry version patch
+
+publish: clean
+	@poetry publish --build
