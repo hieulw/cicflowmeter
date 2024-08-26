@@ -40,8 +40,7 @@ class PacketTime:
             packets = [packet for packet, _ in self.flow.packets]
 
         return [
-            1e6 * float(packets[i].time - packets[i - 1].time)
-            for i in range(1, len(packets))
+            float(packets[i].time - packets[i - 1].time) for i in range(1, len(packets))
         ]
 
     def relative_time_list(self):
@@ -77,7 +76,7 @@ class PacketTime:
 
         """
 
-        return max(self._get_packet_times()) - min(self._get_packet_times())
+        return max(self._get_packet_times())
 
     def get_var(self):
         """Calculates the variation of packet times in a network flow.

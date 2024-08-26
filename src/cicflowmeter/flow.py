@@ -96,7 +96,7 @@ class Flow:
             "protocol": self.protocol,
             # Basic information from packet times
             "timestamp": packet_time.get_timestamp(),
-            "flow_duration": 1e6 * packet_time.get_duration(),
+            "flow_duration": packet_time.get_duration(),
             "flow_byts_s": flow_bytes.get_rate(),
             "flow_pkts_s": packet_count.get_rate(),
             "fwd_pkts_s": packet_count.get_rate(PacketDirection.FORWARD),
@@ -200,9 +200,7 @@ class Flow:
         self.update_subflow(packet)
 
         if self.start_timestamp != 0:
-            self.flow_interarrival_time.append(
-                1e6 * (packet.time - self.latest_timestamp)
-            )
+            self.flow_interarrival_time.append(packet.time - self.latest_timestamp)
 
         self.latest_timestamp = max(packet.time, self.latest_timestamp)
 
@@ -241,10 +239,10 @@ class Flow:
 
         """
         if (current_time - self.last_active) > constants.ACTIVE_TIMEOUT:
-            duration = abs(float(self.last_active - self.start_active))
+            duration = abs(self.last_active - self.start_active)
             if duration > 0:
-                self.active.append(1e6 * duration)
-            self.idle.append(1e6 * (current_time - self.last_active))
+                self.active.append(duration)
+            self.idle.append(current_time - self.last_active)
             self.start_active = current_time
             self.last_active = current_time
         else:
