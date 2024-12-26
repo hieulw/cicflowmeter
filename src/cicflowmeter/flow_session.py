@@ -87,6 +87,68 @@ class FlowSession(DefaultSession):
         if self.packets_count % GARBAGE_COLLECT_PACKETS == 0 or flow.duration > 120:
             self.garbage_collect(pkt.time)
 
+    def process(self, pkt: Packet):
+        """
+        Needed for use in scapy versions above 2.5 because of a breaking change in scapy. 
+        Functionality is same as on_packet_received, but returnvalues are added. 
+        """
+        self.logger.debug(f"Packet {self.packets_count}: {pkt}")
+        count = 0
+        direction = PacketDirection.FORWARD
+
+        if "TCP" not in pkt and "UDP" not in pkt:
+            return pkt  # Return the processed packet
+
+        try:
+            # Creates a key variable to check
+            packet_flow_key = get_packet_flow_key(pkt, direction)
+            flow = self.flows.get((packet_flow_key, count))
+        except Exception:
+            return pkt  # Return the processed packet 
+
+        self.packets_count += 1
+        
+
+        # If there is no forward flow with a count of 0
+        if flow is None:
+            # There might be one of it in reverse
+            direction = PacketDirection.REVERSE
+            packet_flow_key = get_packet_flow_key(pkt, direction)
+            flow = self.flows.get((packet_flow_key, count))
+
+        if flow is None:
+            # If no flow exists create a new flow
+            direction = PacketDirection.FORWARD
+            flow = Flow(pkt, direction)
+            packet_flow_key = get_packet_flow_key(pkt, direction)
+            self.flows[(packet_flow_key, count)] = flow
+
+        elif (pkt.time - flow.latest_timestamp) > EXPIRED_UPDATE:
+            # If the packet exists in the flow but the packet is sent
+            # after too much of a delay than it is a part of a new flow.
+            expired = EXPIRED_UPDATE
+            while (pkt.time - flow.latest_timestamp) > expired:
+                count += 1
+                expired += EXPIRED_UPDATE
+                flow = self.flows.get((packet_flow_key, count))
+
+                if flow is None:
+                    flow = Flow(pkt, direction)
+                    self.flows[(packet_flow_key, count)] = flow
+                    break
+        elif "F" in pkt.flags:
+            # If it has FIN flag then early collect flow and continue
+            flow.add_packet(pkt, direction)
+            self.garbage_collect(pkt.time)
+            return None # Return None to indicate processing is incomplete
+
+        flow.add_packet(pkt, direction)
+
+        if self.packets_count % GARBAGE_COLLECT_PACKETS == 0 or flow.duration > 120:
+            self.garbage_collect(pkt.time)
+        
+        return pkt  # Return the processed packet
+
     def get_flows(self):
         return self.flows.values()
 
