@@ -85,7 +85,7 @@ def test_features(mock_flow_data):
         "psh_flag_cnt",
         "ack_flag_cnt",
         "urg_flag_cnt",
-        "cwe_flag_count",
+        "cwr_flag_count",
         "ece_flag_cnt",
         "down_up_ratio",
         "pkt_size_avg",
