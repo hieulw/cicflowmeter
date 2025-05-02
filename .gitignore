@@ -9,3 +9,4 @@ venv/
 *.pcap
 *.pyc
 .idea
+.aider*
