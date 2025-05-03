@@ -47,10 +47,13 @@ def get_packet_flow_key(packet: Packet, direction: PacketDirection) -> tuple:
         src_ip = packet["IP"].src
         src_port = packet[protocol].sport
         dest_port = packet[protocol].dport
-    else:
+        # Return the tuple in the order (src_ip, dest_ip, src_port, dest_port) for FORWARD
+        return src_ip, dest_ip, src_port, dest_port
+    else: # REVERSE
         dest_ip = packet["IP"].src
         src_ip = packet["IP"].dst
         src_port = packet[protocol].dport
         dest_port = packet[protocol].sport
-
-    return dest_ip, src_ip, src_port, dest_port
+        # Return the tuple in the order (src_ip, dest_ip, src_port, dest_port)
+        # The assignments above handle the direction swapping logic.
+        return src_ip, dest_ip, src_port, dest_port

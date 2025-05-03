@@ -28,16 +28,21 @@ class Flow:
             self.dest_port,
         ) = get_packet_flow_key(packet, direction)
 
-        self.packets = []
+        # Initialize flow properties with the first packet
+        self.packets = [(packet, direction)] # Add the first packet
         self.flow_interarrival_time = []
-        self.latest_timestamp = 0
-        self.start_timestamp = 0
-        self.init_window_size = {
-            PacketDirection.FORWARD: 0,
-            PacketDirection.REVERSE: 0,
-        }
+        self.start_timestamp = packet.time
+        self.latest_timestamp = packet.time # Initialize latest_timestamp too
+        self.protocol = packet.proto
 
-        self.start_active = 0
+        # Initialize window sizes
+        self.init_window_size = {PacketDirection.FORWARD: 0, PacketDirection.REVERSE: 0}
+        if "TCP" in packet:
+             # Set initial window size based on the first packet's direction
+            self.init_window_size[direction] = packet["TCP"].window
+
+        # Initialize active/idle tracking
+        self.start_active = packet.time
         self.last_active = 0
         self.active = []
         self.idle = []
@@ -196,27 +201,24 @@ class Flow:
         """
         self.packets.append((packet, direction))
 
+        # Calculate interarrival time using the previous latest_timestamp
+        # This check prevents adding a 0 IAT for the very first packet added after init
+        if len(self.packets) > 1:
+             self.flow_interarrival_time.append(packet.time - self.latest_timestamp)
+
+        # Update latest timestamp
+        self.latest_timestamp = max(packet.time, self.latest_timestamp)
+
+        # Update flow bulk and subflow stats
         self.update_flow_bulk(packet, direction)
         self.update_subflow(packet)
 
-        if self.start_timestamp != 0:
-            self.flow_interarrival_time.append(packet.time - self.latest_timestamp)
 
-        self.latest_timestamp = max(packet.time, self.latest_timestamp)
+        # Update initial window size if not already set for this direction
+        if "TCP" in packet and self.init_window_size[direction] == 0:
+            self.init_window_size[direction] = packet["TCP"].window
 
-        if "TCP" in packet:
-            if (
-                direction == PacketDirection.FORWARD
-                and self.init_window_size[direction] == 0
-            ):
-                self.init_window_size[direction] = packet["TCP"].window
-            elif direction == PacketDirection.REVERSE:
-                self.init_window_size[direction] = packet["TCP"].window
-
-        # First packet of the flow
-        if self.start_timestamp == 0:
-            self.start_timestamp = packet.time
-            self.protocol = packet.proto
+        # Note: start_timestamp and protocol are set in __init__
 
     def update_subflow(self, packet: Packet):
         """Update subflow

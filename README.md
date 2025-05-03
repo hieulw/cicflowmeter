@@ -7,7 +7,8 @@
 ```sh
 git clone https://github.com/hieulw/cicflowmeter
 cd cicflowmeter
-poetry install
+uv sync
+source .venv/bin/activate
 ```
 
 ### Usage

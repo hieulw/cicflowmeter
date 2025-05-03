@@ -129,7 +129,19 @@ class FlowBytes:
         return rate
 
     def _header_size(self, packet):
-        return packet[IP].ihl * 4 if TCP in packet else 8
+        # Calculate IP header size if IP layer exists
+        if IP in packet:
+            ihl = packet[IP].ihl
+            # Handle case where ihl might be None (though ideally shouldn't happen with proper packet construction)
+            if ihl is None:
+                # Default to 20 bytes (standard IPv4 header without options)
+                # TODO: Consider logging a warning here
+                return 20
+            else:
+                return ihl * 4
+        else:
+            # No IP layer found
+            return 0
 
     def get_reverse_header_bytes(self) -> int:
         """Calculates the amount of header bytes in the header sent in the opposite direction as the flow.

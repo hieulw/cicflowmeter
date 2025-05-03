@@ -21,11 +21,11 @@ dependencies = [
 [project.scripts]
 cicflowmeter = "cicflowmeter.sniffer:main"
 
-[tool.uv]
-# Settings specific to uv, if any
-
-[tool.pytest.ini_options]
-# pytest configurations, if any
+[dependency-groups]
+dev = [
+    "pytest",
+    "ruff",
+]
 
 [build-system]
 requires = ["hatchling"]

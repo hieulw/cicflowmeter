@@ -1,17 +1,17 @@
-VERSION:=$(shell poetry version --short)
+VERSION:=$(shell uv version --short)
 
 install:
-	@poetry install
+	@uv sync
 
 clean:
 	rm -rf *.egg-info build dist report.xml *.csv
 
 release-minor:
-	@poetry version minor
+	@uv version --bump minor
 	@git tag -a v$(VERSION)
 
 release-patch:
-	@poetry version patch
+	@uv version --bump patch
 
 publish: clean
-	@poetry publish --build
+	@uv publish
