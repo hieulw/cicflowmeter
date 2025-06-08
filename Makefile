@@ -12,6 +12,8 @@ release-minor:
 
 release-patch:
 	@uv version --bump patch
+	@git tag -a v$(VERSION)
 
 publish: clean
+	@uv build
 	@uv publish

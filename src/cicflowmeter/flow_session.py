@@ -3,7 +3,7 @@ from scapy.sessions import DefaultSession
 
 from cicflowmeter.writer import output_writer_factory
 
-from .constants import EXPIRED_UPDATE, GARBAGE_COLLECT_PACKETS
+from .constants import EXPIRED_UPDATE, PACKETS_PER_GC
 from .features.context import PacketDirection, get_packet_flow_key
 from .flow import Flow
 from .utils import get_logger
@@ -12,13 +12,14 @@ from .utils import get_logger
 class FlowSession(DefaultSession):
     """Creates a list of network flows."""
 
-    verbose = False
-    fields = None
-    output_mode = None
-    output = None
-
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self, output_mode=None, output=None, fields=None, verbose=False, *args, **kwargs
+    ):
         self.flows: dict[tuple, Flow] = {}
+        self.verbose = verbose
+        self.fields = fields
+        self.output_mode = output_mode
+        self.output = output
         self.logger = get_logger(self.verbose)
         self.packets_count = 0
         self.output_writer = output_writer_factory(self.output_mode, self.output)
@@ -34,25 +35,24 @@ class FlowSession(DefaultSession):
 
     def process(self, pkt: Packet):
         """
-        Needed for use in scapy versions above 2.5 because of a breaking change in scapy. 
-        Functionality is same as on_packet_received, but returnvalues are added. 
+        Needed for use in scapy versions above 2.5 because of a breaking change in scapy.
+        Functionality is same as on_packet_received, but returnvalues are added.
         """
         self.logger.debug(f"Packet {self.packets_count}: {pkt}")
         count = 0
         direction = PacketDirection.FORWARD
 
         if "TCP" not in pkt and "UDP" not in pkt:
-            return pkt  # Return the processed packet
+            return None  # Do not return the packet, prevents Scapy from printing
 
         try:
             # Creates a key variable to check
             packet_flow_key = get_packet_flow_key(pkt, direction)
             flow = self.flows.get((packet_flow_key, count))
         except Exception:
-            return pkt  # Return the processed packet 
+            return None  # Do not return the packet
 
         self.packets_count += 1
-        
 
         # If there is no forward flow with a count of 0
         if flow is None:
@@ -85,14 +85,14 @@ class FlowSession(DefaultSession):
             # If it has FIN flag then early collect flow and continue
             flow.add_packet(pkt, direction)
             self.garbage_collect(pkt.time)
-            return None # Return None to indicate processing is incomplete
+            return None  # Return None to indicate processing is incomplete
 
         flow.add_packet(pkt, direction)
 
-        if self.packets_count % GARBAGE_COLLECT_PACKETS == 0 or flow.duration > 120:
+        if self.packets_count % PACKETS_PER_GC == 0 or flow.duration > 120:
             self.garbage_collect(pkt.time)
-        
-        return pkt  # Return the processed packet
+
+        return None  # Always return None to prevent Scapy from printing
 
     def get_flows(self):
         return self.flows.values()
@@ -112,3 +112,10 @@ class FlowSession(DefaultSession):
             self.output_writer.write(flow.get_data(self.fields))
             del self.flows[k]
             self.logger.debug(f"Flow Collected! Remain Flows = {len(self.flows)}")
+
+    def flush_flows(self):
+        # Write all remaining flows to output (for end of sniffing)
+        for flow in list(self.flows.values()):
+            self.output_writer.write(flow.get_data(self.fields))
+        self.flows.clear()
+        del self.output_writer

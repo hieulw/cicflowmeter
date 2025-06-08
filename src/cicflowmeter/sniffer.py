@@ -8,33 +8,35 @@ from cicflowmeter.flow_session import FlowSession
 def create_sniffer(
     input_file, input_interface, output_mode, output, fields=None, verbose=False
 ):
-    assert (input_file is None) ^ (
-        input_interface is None
-    ), "Either provide interface input or file input not both"
+    assert (input_file is None) ^ (input_interface is None), (
+        "Either provide interface input or file input not both"
+    )
     if fields is not None:
         fields = fields.split(",")
 
-    setattr(FlowSession, "output_mode", output_mode)
-    setattr(FlowSession, "output", output)
-    setattr(FlowSession, "fields", fields)
-    setattr(FlowSession, "verbose", verbose)
+    # Pass config to FlowSession constructor
+    session = FlowSession(
+        output_mode=output_mode,
+        output=output,
+        fields=fields,
+        verbose=verbose,
+    )
 
     if input_file:
-        return AsyncSniffer(
+        sniffer = AsyncSniffer(
             offline=input_file,
             filter="ip and (tcp or udp)",
-            prn=None,
-            session=FlowSession,
+            prn=session.process,
             store=False,
         )
     else:
-        return AsyncSniffer(
+        sniffer = AsyncSniffer(
             iface=input_interface,
             filter="ip and (tcp or udp)",
-            prn=None,
-            session=FlowSession,
+            prn=session.process,
             store=False,
         )
+    return sniffer, session
 
 
 def main():
@@ -90,7 +92,7 @@ def main():
 
     args = parser.parse_args()
 
-    sniffer = create_sniffer(
+    sniffer, session = create_sniffer(
         args.input_file,
         args.input_interface,
         args.output_mode,
@@ -106,6 +108,8 @@ def main():
         sniffer.stop()
     finally:
         sniffer.join()
+        # Flush all flows at the end
+        session.flush_flows()
 
 
 if __name__ == "__main__":

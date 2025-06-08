@@ -6,9 +6,11 @@ import numpy
 
 
 def get_logger(debug=False):
-    if debug:
-        logging.basicConfig(level=logging.DEBUG)
-    return logging.getLogger("cicflowmeter")
+    logger = logging.getLogger("cicflowmeter")
+    if not logger.hasHandlers():
+        logging.basicConfig()
+    logger.setLevel(logging.DEBUG if debug else logging.WARNING)
+    return logger
 
 
 def grouper(iterable, n, max_groups=0, fillvalue=None):

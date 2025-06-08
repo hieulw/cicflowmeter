@@ -1,4 +1,5 @@
 import time
+from typing import Union
 
 import pytest
 from scapy.layers.inet import ICMP, IP, TCP, UDP
@@ -13,7 +14,7 @@ def create_mock_packet(
     dst_ip="192.168.1.1",
     src_port=12345,
     dst_port=80,
-    proto: TCP | UDP = TCP,
+    proto: Union[TCP, UDP, ICMP] = TCP,
     timestamp=None,
 ):
     """Helper function to create a mock packet with a specific timestamp."""
