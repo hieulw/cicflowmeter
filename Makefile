@@ -1,5 +1,3 @@
-VERSION:=$(shell uv version --short)
-
 install:
 	@uv sync
 
@@ -8,11 +6,11 @@ clean:
 
 release-minor:
 	@uv version --bump minor
-	@git tag -a v$(VERSION)
+	@git tag -a v$(shell uv version --short)
 
 release-patch:
 	@uv version --bump patch
-	@git tag -a v$(VERSION)
+	@git tag -a v$(shell uv version --short)
 
 publish: clean
 	@uv build

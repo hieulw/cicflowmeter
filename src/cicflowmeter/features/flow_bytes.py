@@ -1,4 +1,4 @@
-from scapy.layers.inet import IP, TCP
+from scapy.layers.inet import IP
 
 from .context import PacketDirection
 from .packet_time import PacketTime
