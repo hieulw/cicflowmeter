@@ -22,23 +22,23 @@ class Flow:
         """
 
         (
-            self.dest_ip,
             self.src_ip,
+            self.dest_ip,
             self.src_port,
             self.dest_port,
         ) = get_packet_flow_key(packet, direction)
 
         # Initialize flow properties with the first packet
-        self.packets = [(packet, direction)] # Add the first packet
+        self.packets = [(packet, direction)]  # Add the first packet
         self.flow_interarrival_time = []
         self.start_timestamp = packet.time
-        self.latest_timestamp = packet.time # Initialize latest_timestamp too
+        self.latest_timestamp = packet.time  # Initialize latest_timestamp too
         self.protocol = packet.proto
 
         # Initialize window sizes
         self.init_window_size = {PacketDirection.FORWARD: 0, PacketDirection.REVERSE: 0}
         if "TCP" in packet:
-             # Set initial window size based on the first packet's direction
+            # Set initial window size based on the first packet's direction
             self.init_window_size[direction] = packet["TCP"].window
 
         # Initialize active/idle tracking
@@ -204,7 +204,7 @@ class Flow:
         # Calculate interarrival time using the previous latest_timestamp
         # This check prevents adding a 0 IAT for the very first packet added after init
         if len(self.packets) > 1:
-             self.flow_interarrival_time.append(packet.time - self.latest_timestamp)
+            self.flow_interarrival_time.append(packet.time - self.latest_timestamp)
 
         # Update latest timestamp
         self.latest_timestamp = max(packet.time, self.latest_timestamp)
@@ -212,7 +212,6 @@ class Flow:
         # Update flow bulk and subflow stats
         self.update_flow_bulk(packet, direction)
         self.update_subflow(packet)
-
 
         # Update initial window size if not already set for this direction
         if "TCP" in packet and self.init_window_size[direction] == 0:
