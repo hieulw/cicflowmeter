@@ -1,3 +1,4 @@
+import threading
 from scapy.packet import Packet
 from scapy.sessions import DefaultSession
 
@@ -24,13 +25,22 @@ class FlowSession(DefaultSession):
         self.packets_count = 0
         self.output_writer = output_writer_factory(self.output_mode, self.output)
 
+        # NEW: lock protecting self.flows
+        self._lock = threading.Lock()
+
         super(FlowSession, self).__init__(*args, **kwargs)
 
     def toPacketList(self):
         # Sniffer finished all the packets it needed to sniff.
         # It is not a good place for this, we need to somehow define a finish signal for AsyncSniffer
-        self.garbage_collect(None)
-        del self.output_writer
+        # Use the lock to avoid races with background GC (if any)
+        with self._lock:
+            self.garbage_collect(None)
+            # delete writer after flush
+            try:
+                del self.output_writer
+            except Exception:
+                pass
         return super(FlowSession, self).toPacketList()
 
     def process(self, pkt: Packet):
@@ -46,11 +56,12 @@ class FlowSession(DefaultSession):
             return None  # Do not return the packet, prevents Scapy from printing
 
         try:
-            # Creates a key variable to check
             packet_flow_key = get_packet_flow_key(pkt, direction)
-            flow = self.flows.get((packet_flow_key, count))
+            # Acquire lock only while accessing self.flows
+            with self._lock:
+                flow = self.flows.get((packet_flow_key, count))
         except Exception:
-            return None  # Do not return the packet
+            return None
 
         self.packets_count += 1
 
@@ -62,46 +73,53 @@ class FlowSession(DefaultSession):
             flow = self.flows.get((packet_flow_key, count))
 
         if flow is None:
-            # If no flow exists create a new flow
+            # Create a new flow (we need to insert into dict under lock)
             direction = PacketDirection.FORWARD
             flow = Flow(pkt, direction)
             packet_flow_key = get_packet_flow_key(pkt, direction)
-            self.flows[(packet_flow_key, count)] = flow
+            with self._lock:
+                self.flows[(packet_flow_key, count)] = flow
 
         elif (pkt.time - flow.latest_timestamp) > EXPIRED_UPDATE:
-            # If the packet exists in the flow but the packet is sent
-            # after too much of a delay than it is a part of a new flow.
             expired = EXPIRED_UPDATE
             while (pkt.time - flow.latest_timestamp) > expired:
                 count += 1
                 expired += EXPIRED_UPDATE
-                flow = self.flows.get((packet_flow_key, count))
+                with self._lock:
+                    flow = self.flows.get((packet_flow_key, count))
 
                 if flow is None:
                     flow = Flow(pkt, direction)
-                    self.flows[(packet_flow_key, count)] = flow
+                    with self._lock:
+                        self.flows[(packet_flow_key, count)] = flow
                     break
         elif "F" in pkt.flags:
-            # If it has FIN flag then early collect flow and continue
+            # FIN: add packet and early collect
             flow.add_packet(pkt, direction)
+            # call garbage_collect with current time; protect with lock inside GC
             self.garbage_collect(pkt.time)
-            return None  # Return None to indicate processing is incomplete
+            return None
 
         flow.add_packet(pkt, direction)
 
+        # call garbage_collect only occasionally; the background GC thread will cover periodic execution
         if self.packets_count % PACKETS_PER_GC == 0 or flow.duration > 120:
             self.garbage_collect(pkt.time)
 
-        return None  # Always return None to prevent Scapy from printing
+        return None
 
     def get_flows(self):
         return self.flows.values()
 
     def garbage_collect(self, latest_time) -> None:
         # TODO: Garbage Collection / Feature Extraction should have a separate thread
-        for k in list(self.flows.keys()):
-            flow = self.flows.get(k)
-
+        # Acquire lock while we iterate and delete flows
+        with self._lock:
+            keys = list(self.flows.keys())
+        for k in keys:
+            # get flow without holding lock to minimize lock hold time
+            with self._lock:
+                flow = self.flows.get(k)
             if not flow or (
                 latest_time is not None
                 and latest_time - flow.latest_timestamp < EXPIRED_UPDATE
@@ -109,13 +127,27 @@ class FlowSession(DefaultSession):
             ):
                 continue
 
-            self.output_writer.write(flow.get_data(self.fields))
-            del self.flows[k]
+            # Write the flow out - writer may perform IO (do it outside the lock)
+            data = flow.get_data(self.fields)
+
+            # Now safely delete the entry under lock
+            with self._lock:
+                # re-check existence
+                if k in self.flows:
+                    del self.flows[k]
+
+            # Finally write to output (IO outside the lock)
+            self.output_writer.write(data)
             self.logger.debug(f"Flow Collected! Remain Flows = {len(self.flows)}")
 
     def flush_flows(self):
         # Write all remaining flows to output (for end of sniffing)
-        for flow in list(self.flows.values()):
+        with self._lock:
+            items = list(self.flows.values())
+            self.flows.clear()
+        for flow in items:
             self.output_writer.write(flow.get_data(self.fields))
-        self.flows.clear()
-        del self.output_writer
+        try:
+            del self.output_writer
+        except Exception:
+            pass

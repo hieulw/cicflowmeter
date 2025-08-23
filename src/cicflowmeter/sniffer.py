@@ -1,8 +1,30 @@
 import argparse
+import time
 
 from scapy.sendrecv import AsyncSniffer
 
 from cicflowmeter.flow_session import FlowSession
+import threading
+
+GC_INTERVAL = 1.0  # seconds (tune as needed)
+
+
+def _start_periodic_gc(session, interval=GC_INTERVAL):
+    stop_event = threading.Event()
+
+    def _gc_loop():
+        while not stop_event.wait(interval):
+            try:
+                session.garbage_collect(time.time())
+            except Exception:
+                # Don't let GC threading failures kill the process
+                session.logger.exception("Periodic GC error")
+
+    t = threading.Thread(target=_gc_loop, name="flow-gc", daemon=True)
+    t.start()
+    # attach to session so we can stop it later
+    session._gc_thread = t
+    session._gc_stop = stop_event
 
 
 def create_sniffer(
@@ -21,6 +43,8 @@ def create_sniffer(
         fields=fields,
         verbose=verbose,
     )
+
+    _start_periodic_gc(session, interval=GC_INTERVAL)
 
     if input_file:
         sniffer = AsyncSniffer(
@@ -107,6 +131,10 @@ def main():
     except KeyboardInterrupt:
         sniffer.stop()
     finally:
+        # Stop periodic GC if present
+        if hasattr(session, "_gc_stop"):
+            session._gc_stop.set()
+            session._gc_thread.join(timeout=2.0)
         sniffer.join()
         # Flush all flows at the end
         session.flush_flows()
