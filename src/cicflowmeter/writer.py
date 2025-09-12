@@ -32,8 +32,12 @@ class HttpWriter(OutputWriter):
         self.url = output_url
         self.session = requests.Session()
 
-    def write(self, data: dict) -> None:
-        self.session.post(self.url, json=data)
+    def write(self, data):
+        try:
+            resp = self.session.post(self.url, json=data, timeout=5)
+            resp.raise_for_status()  # raise if not 2xx
+        except Exception:
+            self.logger.exception("HTTPWriter failed posting flow")
 
     def __del__(self):
         self.session.close()
