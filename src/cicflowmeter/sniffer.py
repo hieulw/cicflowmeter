@@ -65,10 +65,86 @@ def create_sniffer(
         )
     return sniffer, session
 
+def process_directory_merged(input_dir, output_dir, fields=None, verbose=False):
+    input_path = Path(input_dir)
+    output_path = Path(output_dir)
+    
+    # Validate input and output directory
+    if not input_path.exists():
+        print(f"Error: Input directory '{input_dir}' does not exist")
+        return
+    
+    if not input_path.is_dir():
+        print(f"Error: Input path '{input_dir}' is not a directory")
+        return
+    
+    if output_path.exists() and output_path.is_file():
+        print(f"Error: Output path '{output_dir}' already exists as a file.")
+        print(f"Please provide a directory path for batch processing.")
+        return
+    
+    try:
+        output_path.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        print(f"Error: Could not create output directory '{output_dir}': {e}")
+        return
+    
+    # Find all pcap files
+    pcap_files = list(input_path.glob("*.pcap")) + list(input_path.glob("*.pcapng"))
+    
+    if not pcap_files:
+        print(f"Error: No pcap files found in {input_dir}")
+        return
+    
+    output_file = output_path / "merged_output.csv"
+    print(f"Found {len(pcap_files)} pcap file(s) to process")
+    print(f"Merging all flows into: {output_file.name}")
+    
+    # Create a single sniffer session for all files
+    session = FlowSession(
+        output_mode="csv",
+        output=str(output_file),
+        fields=fields,
+        verbose=verbose,
+    )
+    
+    _start_periodic_gc(session, interval=GC_INTERVAL)
+    
+    for idx, pcap_file in enumerate(pcap_files, 1):
+        print(f"[{idx}/{len(pcap_files)}] Processing {pcap_file.name}...")
+        
+        try:
+            sniffer = AsyncSniffer(
+                offline=str(pcap_file),
+                filter="ip and (tcp or udp)",
+                prn=session.process,
+                store=False,
+            )
+            
+            sniffer.start()
+            sniffer.join()
+            
+            print(f"[{idx}/{len(pcap_files)}] Completed {pcap_file.name}")
+        except Exception as e:
+            print(f"Error processing {pcap_file.name}: {e}")
+            continue
+    
+    # Stop periodic GC
+    if hasattr(session, "_gc_stop"):
+        session._gc_stop.set()
+        session._gc_thread.join(timeout=2.0)
+    
+    # Flush all remaining flows
+    session.flush_flows()
+    
+    print(f"\nAll done! Merged output saved to: {output_file}")
+
 def process_directory(input_dir, output_dir, fields=None, verbose=False):
     input_path = Path(input_dir)
     output_path = Path(output_dir)
     
+    # Validate input and output directory
+
     if not input_path.exists():
         print(f"Error: Input directory '{input_dir}' does not exist")
         return
@@ -188,16 +264,32 @@ def main():
         help="comma separated fields to include in output (default: all)",
     )
 
+    parser.add_argument(
+        "--merge",
+        action="store_true",
+        help="merge all pcap files into a single CSV (only works with -d/--directory mode)",
+    )
+
     parser.add_argument("-v", "--verbose", action="store_true", help="more verbose")
 
     args = parser.parse_args()
+    if args.merge and not args.input_directory:
+        parser.error("--merge can only be used with -d/--directory mode")
     if args.input_directory:
-        process_directory(
-            args.input_directory,
-            args.output,
-            args.fields,
-            args.verbose,
-        )
+        if args.merge:
+            process_directory_merged(
+                args.input_directory,
+                args.output,
+                args.fields,
+                args.verbose,
+            )
+        else:
+            process_directory(
+                args.input_directory,
+                args.output,
+                args.fields,
+                args.verbose,
+            )
         return
 
     sniffer, session = create_sniffer(
